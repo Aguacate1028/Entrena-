@@ -33,7 +33,9 @@ const AppContent = () => {
 
     const getRedirectRoute = () => {
         if (!isAuthenticated) return '/login';
+        // REDIRECCIÓN DEL STAFF (administrador o Trainer)
         if (user?.rol === 'administrador' || user?.rol === 'Trainer') return '/DashboardAdmin';
+        // REDIRECCIÓN DEL SOCIO
         if (user?.rol === 'Socio') return '/socio/dashboard'; 
         return '/login'; 
     };
@@ -48,6 +50,7 @@ const AppContent = () => {
             <Route path="/unauthorized" element={<Unauthorized />} />
 
             {/* RUTAS PROTEGIDAS PARA EL STAFF (administrador/TRAINER) */}
+            {/* Estas rutas usarán el requiredRole="administrador" */}
             <Route path="/DashboardAdmin" element={<ProtectedRoute requiredRole="administrador"><DashboardAdmin /></ProtectedRoute>} />
             <Route path="/GestionSocios" element={<ProtectedRoute requiredRole="administrador"><GestionSocios /></ProtectedRoute>} />
             <Route path="/Pagos" element={<ProtectedRoute requiredRole="administrador"><Pagos /></ProtectedRoute>} />
@@ -56,7 +59,7 @@ const AppContent = () => {
             <Route path="/Mantenimiento" element={<ProtectedRoute requiredRole="administrador"><Mantenimiento /></ProtectedRoute>} />
             <Route path="/Empleados" element={<ProtectedRoute requiredRole="administrador"><Empleados /></ProtectedRoute>} />
             
-            {/* RUTAS PROTEGIDAS PARA EL SOCIO */}
+            {/* RUTAS PROTEGIDAS PARA EL SOCIO - Usamos path /socio/* */}
             <Route path="/socio/dashboard" element={<ProtectedRoute requiredRole="Socio"><DashboardSocio /></ProtectedRoute>} />
             <Route path="/socio/perfil" element={<ProtectedRoute requiredRole="Socio"><PerfilSocio /></ProtectedRoute>} />
             <Route path="/socio/clases" element={<ProtectedRoute requiredRole="Socio"><RegistroClases /></ProtectedRoute>} />

@@ -1,5 +1,5 @@
 import React, { createContext, useReducer } from 'react';
-import { MOCK_USER_ADMINISTRADOR, MOCK_USER_SOCIO } from '../mocks/mockData'; 
+import { MOCK_USER_administrador, MOCK_USER_SOCIO } from '../mocks/mockData';
 
 const initialState = {
   user: JSON.parse(localStorage.getItem('user')) || null, 
@@ -33,9 +33,8 @@ export const AuthProvider = ({ children }) => {
     await new Promise(resolve => setTimeout(resolve, 500)); 
 
     // Verifica credenciales de mock
-    // CORRECCIÓN DE MOCK_USER_administrador
-    if (email === MOCK_USER_ADMINISTRADOR.email && password === 'administrador') {
-        dispatch({ type: 'SET_USER', payload: MOCK_USER_ADMINISTRADOR });
+    if (email === MOCK_USER_administrador.email && password === 'administrador') {
+        dispatch({ type: 'SET_USER', payload: MOCK_USER_administrador });
         return { success: true, rol: 'administrador' };
     }
     if (email === MOCK_USER_SOCIO.email && password === 'socio') {
