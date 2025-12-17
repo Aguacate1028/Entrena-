@@ -1,12 +1,26 @@
-// server/db.js
-const Pool = require("pg").Pool;
+import { createClient } from "@supabase/supabase-js";
+import dotenv from "dotenv";
 
-const pool = new Pool({
-    user: "admin",         // El usuario que creaste
-    host: "localhost",
-    database: "EntrenaPlus",   // La DB que creaste en el paso anterior
-    password: "12345",     // La contraseña que estableciste
-    port: 5432,
-});
+dotenv.config();
 
-module.exports = pool;
+const supabaseUrl = "https://ydycgimjpbolorutozvj.supabase.co";
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY; 
+
+export const supabase = createClient(supabaseUrl, supabaseKey);
+
+export async function testConnection() {
+  try {
+    const { data, error } = await supabase
+      .from("usuarios")
+      .select("*")
+      .limit(1);
+
+    if (error) throw error;
+    console.log("Conectado a Supabase correctamente");
+    return true;
+  } catch (error) {
+    console.log("Error de conexión:", error.message);
+    return false;
+  }
+}
+
