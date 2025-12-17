@@ -17,7 +17,7 @@ const MembershipSection = () => <div className="p-16 text-center bg-white text-n
 
 
 const HomePage = () => {
-    const { user, logout, isAuthenticated } = useContext(AuthContext); 
+    const { user, logout, isAuthenticated, register, login } = useContext(AuthContext); 
     const navigate = useNavigate();
 
     const [showLogin, setShowLogin] = useState(false);
@@ -27,10 +27,16 @@ const HomePage = () => {
         await login(email, password); 
     };
 
-    const handleRegister = (name, email, password) => {
-        // SIMULACIÓN DE REGISTRO
-        // Llama a la simulación de login después del "registro"
-        login(email, password); 
+
+    const handleRegister = async (name, email, password, birthDate, role) => {
+        const result = await register(name, email, password, birthDate, role);
+        
+        if (result.success) {
+            // El login se hace automáticamente dentro de la función register del contexto
+            setShowRegister(false);
+        } else {
+            alert(result.error);
+        }
     };
     
     const handleLoginClick = () => {
@@ -49,7 +55,7 @@ const HomePage = () => {
     }
 
     const userName = user?.nombre.split(' ')[0] || '';
-    const isAdmin = user?.rol === 'administrador' || user?.rol === 'Trainer';
+    const isAdmin = user?.rol === 'administrador' || user?.rol === 'staff';
 
 
     return (

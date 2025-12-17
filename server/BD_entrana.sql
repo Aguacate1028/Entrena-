@@ -1,17 +1,28 @@
 -- =============================================================
--- SCRIPT DE CREACIÓN DE BASE DE DATOS: ENTRENA+
+-- SCRIPT DE CREACIÓN DE BASE DE DATOS: EntrenaPlus
 -- Proyecto: Sistema de Gestión para Gimnasios Locales
 -- =============================================================
+CREATE DATABASE EntrenaPlus;
 
 -- 1. Tabla de Usuarios (Centraliza Dueño, Admin, Staff y Clientes)
-CREATE TABLE IF NOT EXISTS usuarios (
+CREATE TABLE usuarios (
     id_usuario SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    rol VARCHAR(20) NOT NULL CHECK (rol IN ('dueño', 'admin', 'staff', 'cliente')),
+    rol VARCHAR(20) NOT NULL CHECK (rol IN ('administrador', 'staff', 'socio')),
+    fecha_nacimiento DATE NOT NULL,
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+-- Vista para reportes de edad (Útil para el Dueño)
+CREATE OR REPLACE VIEW vista_usuarios_edad AS
+SELECT 
+    nombre, 
+    email, 
+    rol, 
+    EXTRACT(YEAR FROM AGE(fecha_nacimiento)) AS edad
+FROM usuarios;
+
 
 -- 2. Tabla de Membresías (Catálogo de Planes)
 CREATE TABLE IF NOT EXISTS membresias (

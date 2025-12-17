@@ -1,9 +1,10 @@
 import React, { useContext } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 const AdminSidebar = () => {
   const { logout, user } = useContext(AuthContext);
+  const navigate = useNavigate(); // Inicializar el navegador
 
   const menuItems = [
     { name: 'Dashboard', path: '/DashboardAdmin', icon: '🏠' },
@@ -15,22 +16,27 @@ const AdminSidebar = () => {
     { name: 'Empleados', path: '/Empleados', icon: '👨‍💼' }, 
   ];
   
-  if (user?.rol === 'Socio') {
+  if (user?.rol === 'socio') {
       return null; 
   }
 
+    const handleLogout = () => {
+    logout(); // Limpia el estado y el localStorage
+    navigate('/', { replace: true }); // Redirige a la raíz (Home.jsx)
+  };
+
   return (
   
-    <div className="hidden md:flex w-64 bg-gray-800 text-white p-6 flex-col min-h-screen shadow-2xl border-r border-gray-700">
+    <div className="hidden md:flex w-64 bg-white-800 text-gray p-6 flex-col min-h-screen shadow-2xl border-r border-gray-700">
    
-      <h3 className="text-3xl font-extrabold mb-8 text-green-400 tracking-widest">
+      <h3 className="text-3xl font-extrabold mb-8 text-purple-400 tracking-widest">
         ENTRENA+
       </h3>
       
       <div className="mb-6 pb-4 border-b border-gray-700">
-        <p className="text-md font-medium text-gray-200">Hola, **{user?.nombre || 'Administrador'}**</p>
+        <p className="text-md font-medium text-gray-200">Hola, **{user?.nombre || 'administrador'}**</p>
        
-        <p className="text-sm text-blue-400">Rol: **{user?.rol || 'Administrador'}**</p>
+        <p className="text-sm text-blue-400">Rol: **{user?.rol || 'administrador'}**</p>
       </div>
       
       <nav className="flex-grow">
@@ -55,7 +61,7 @@ const AdminSidebar = () => {
       
       <button 
         className="mt-4 w-full py-2 px-4 bg-red-700 hover:bg-red-600 text-white font-semibold rounded-lg shadow-lg transition-colors duration-200" 
-        onClick={logout}
+        onClick={handleLogout} 
       >
         Cerrar Sesión
       </button>

@@ -1,69 +1,75 @@
-// server/index.js
-const express = require("express");
+const express = require('express');
+const cors = require('cors'); // Necesitas instalarlo: npm install cors
+const pool = require('./db');
+const bcrypt = require('bcrypt');
+
 const app = express();
-const cors = require("cors");
-const pool = require("./db"); // Importa la configuración de la DB
 
-// Middleware
+// Middlewares
 app.use(cors());
-app.use(express.json()); // Permite acceder al cuerpo de la petición (req.body)
+app.use(express.json());
 
-const port = 5000;
-
-// **********************************
-// RUTAS (ROUTES)
-// **********************************
-
-// 1. CREAR una Tarea (POST)
-app.post("/todos", async (req, res) => {
+// RUTA DE REGISTRO
+app.post('/api/register', async (req, res) => {
     try {
-        const { description } = req.body;
-        const newTodo = await pool.query(
-        "INSERT INTO todo (description) VALUES($1) RETURNING *",
-        [description] // $1 hace referencia al primer elemento en el array [description]
+        const { nombre, email, password, fecha_nacimiento, rol } = req.body;
+
+        // 1. Encriptar contraseña
+        const saltRounds = 10;
+        const passwordHash = await bcrypt.hash(password, saltRounds);
+
+        // 2. Insertar en la base de datos
+        const newUser = await pool.query(
+            "INSERT INTO usuarios (nombre, email, password_hash, fecha_nacimiento, rol) VALUES ($1, $2, $3, $4, $5) RETURNING id_usuario, nombre, rol",
+            [nombre, email, passwordHash, fecha_nacimiento, rol]
         );
 
-        res.json(newTodo.rows[0]);
+        res.json({
+            success: true,
+            message: "Usuario registrado con éxito",
+            user: newUser.rows[0]
+        });
+
     } catch (err) {
         console.error(err.message);
-        res.status(500).send("Server Error");
+        if (err.code === '23505') {
+            return res.status(400).json({ error: "El correo electrónico ya está registrado." });
+        }
+        res.status(500).json({ error: "Error en el servidor al registrar" });
     }
 });
 
-// 2. OBTENER todas las Tareas (GET)
-app.get("/todos", async (req, res) => {
-    try {
-        const allTodos = await pool.query("SELECT * FROM todo ORDER BY todo_id ASC");
-        res.json(allTodos.rows);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send("Server Error");
+// RUTA DE LOGIN
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const userResult = await pool.query("SELECT * FROM usuarios WHERE email = $1", [email]);
+    
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({ error: "El correo no está registrado" });
     }
+
+    const user = userResult.rows[0];
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+
+    if (!validPassword) {
+      return res.status(401).json({ error: "Contraseña incorrecta" });
+    }
+
+    res.json({
+      success: true,
+      user: {
+        id: user.id_usuario,
+        nombre: user.nombre,
+        rol: user.rol
+      }
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Error en el servidor al iniciar sesión" });
+  }
 });
 
-// 3. ELIMINAR una Tarea (DELETE)
-app.delete("/todos/:id", async (req, res) => {
-    try {
-        // 1. Extraer el ID de la URL. Usamos req.params
-        const { id } = req.params;
-
-        // 2. Consulta SQL para eliminar la fila con ese ID
-        const deleteTodo = await pool.query("DELETE FROM todo WHERE todo_id = $1", [
-            id,
-        ]);
-
-        // 3. Respuesta al cliente
-        res.json("La tarea ha sido eliminada con éxito.");
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send("Server Error al eliminar");
-    }
-});
-
-// **********************************
-// INICIO DEL SERVIDOR
-// **********************************
-
-app.listen(port, () => {
-    console.log(`Server corriendo en http://localhost:${port}`);
+app.listen(5000, () => {
+    console.log("Servidor escuchando en el puerto 5000");
 });

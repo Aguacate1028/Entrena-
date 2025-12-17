@@ -33,24 +33,26 @@ const AppContent = () => {
     const { isAuthenticated, user } = useContext(AuthContext);
 
     const getRedirectRoute = () => {
-        if (!isAuthenticated) return '/login';
-        // REDIRECCIÓN DEL STAFF (administrador o Trainer)
-        if (user?.rol === 'administrador' || user?.rol === 'Trainer') return '/DashboardAdmin';
+        if (!isAuthenticated) return 'null';
+        // REDIRECCIÓN DEL STAFF (administrador o staff)
+        if (user?.rol === 'administrador' || user?.rol === 'staff') return '/DashboardAdmin';
         // REDIRECCIÓN DEL SOCIO
-        if (user?.rol === 'Socio') return '/socio/dashboard'; 
-        return '/login'; 
+        if (user?.rol === 'socio') return '/socio/dashboard'; 
+        return 'null'; 
     };
     
     return (
         <Routes>
-            {/* Redirige la ruta raíz (/) */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/" element={isAuthenticated ? <Navigate to={getRedirectRoute()} replace /> : <HomePage />} />
+            {/* Si está autenticado, redirige a su panel; si no, muestra Home siempre */}
+            <Route 
+                path="/" 
+                element={isAuthenticated ? <Navigate to={getRedirectRoute()} replace /> : <HomePage />} 
+            />
             {/* Rutas Públicas */}
             <Route path="/login" element={<LoginModal />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
 
-            {/* RUTAS PROTEGIDAS PARA EL STAFF (administrador/TRAINER) */}
+            {/* RUTAS PROTEGIDAS PARA EL STAFF (administrador/staff) */}
             {/* Estas rutas usarán el requiredRole="administrador" */}
             <Route path="/DashboardAdmin" element={<ProtectedRoute requiredRole="administrador"><DashboardAdmin /></ProtectedRoute>} />
             <Route path="/GestionSocios" element={<ProtectedRoute requiredRole="administrador"><GestionSocios /></ProtectedRoute>} />
@@ -61,12 +63,12 @@ const AppContent = () => {
             <Route path="/Empleados" element={<ProtectedRoute requiredRole="administrador"><Empleados /></ProtectedRoute>} />
             
             {/* RUTAS PROTEGIDAS PARA EL SOCIO - Usamos path /socio/* */}
-            <Route path="/socio/dashboard" element={<ProtectedRoute requiredRole="Socio"><DashboardSocio /></ProtectedRoute>} />
-            <Route path="/socio/perfil" element={<ProtectedRoute requiredRole="Socio"><PerfilSocio /></ProtectedRoute>} />
-            <Route path="/socio/clases" element={<ProtectedRoute requiredRole="Socio"><RegistroClases /></ProtectedRoute>} />
-            <Route path="/socio/imc" element={<ProtectedRoute requiredRole="Socio"><CalculoIMC /></ProtectedRoute>} />
-            <Route path="/socio/progreso" element={<ProtectedRoute requiredRole="Socio"><ProgresoRutinas /></ProtectedRoute>} />
-            <Route path="/socio/manual" element={<ProtectedRoute requiredRole="Socio"><ManualMaquinas /></ProtectedRoute>} />
+            <Route path="/socio/dashboard" element={<ProtectedRoute requiredRole="socio"><DashboardSocio /></ProtectedRoute>} />
+            <Route path="/socio/perfil" element={<ProtectedRoute requiredRole="socio"><PerfilSocio /></ProtectedRoute>} />
+            <Route path="/socio/clases" element={<ProtectedRoute requiredRole="socio"><RegistroClases /></ProtectedRoute>} />
+            <Route path="/socio/imc" element={<ProtectedRoute requiredRole="socio"><CalculoIMC /></ProtectedRoute>} />
+            <Route path="/socio/progreso" element={<ProtectedRoute requiredRole="socio"><ProgresoRutinas /></ProtectedRoute>} />
+            <Route path="/socio/manual" element={<ProtectedRoute requiredRole="socio"><ManualMaquinas /></ProtectedRoute>} />
 
 
             {/* Catch-all para 404 */}

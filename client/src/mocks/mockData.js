@@ -8,7 +8,7 @@ export const MOCK_USER_administrador = {
 export const MOCK_USER_SOCIO = {
     id: 'S105',
     nombre: 'Dylan Pérez',
-    rol: 'Socio',
+    rol: 'socio',
     email: 'dylan@mail.com',
 };
 

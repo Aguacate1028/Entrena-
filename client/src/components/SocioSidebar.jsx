@@ -1,11 +1,12 @@
 // src/components/SocioSidebar.jsx
 import React, { useContext, useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 const SocioSidebar = () => {
   const { logout, user } = useContext(AuthContext);
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate(); // Inicializar el navegador
 
   const menuItems = [
     { name: 'Dashboard', path: '/socio/dashboard', icon: '🏠' },
@@ -17,9 +18,15 @@ const SocioSidebar = () => {
     { name: 'Guía y Ayuda', path: '/socio/manual', icon: '📚' }, 
   ];
   
-  if (user?.rol !== 'Socio') {
+  if (user?.rol !== 'socio') {
       return null; 
   }
+
+  // Función para cerrar sesión y redirigir
+  const handleLogout = () => {
+    logout(); // Limpia el estado y el localStorage
+    navigate('/', { replace: true }); // Redirige a la raíz (Home.jsx)
+  };
 
   const navClass = ({ isActive }) => 
     `flex items-center p-3 my-1 rounded-xl transition-colors duration-200 
@@ -53,9 +60,9 @@ const SocioSidebar = () => {
         </h3>
         
         <div className="mb-6 pb-4 border-b border-gray-700">
-          <p className="text-md font-medium text-gray-200">Hola, **{user?.nombre || 'Socio'}**</p>
+          <p className="text-md font-medium text-gray-200">Hola, **{user?.nombre || 'socio'}**</p>
           {/* Reemplazo: text-neon-purple -> text-blue-400 */}
-          <p className="text-sm text-blue-400">Rol: **{user?.rol || 'Socio'}**</p>
+          <p className="text-sm text-blue-400">Rol: **{user?.rol || 'socio'}**</p>
         </div>
         
         <nav className="flex-grow">
@@ -74,7 +81,7 @@ const SocioSidebar = () => {
         
         <button 
           className="mt-4 w-full py-2 px-4 bg-red-700 hover:bg-red-600 text-white font-semibold rounded-lg shadow-lg transition-colors duration-200" 
-          onClick={logout}
+          onClick={handleLogout}
         >
           Cerrar Sesión
         </button>

@@ -18,18 +18,18 @@ const LoginModal = ({ onClose, onSwitchToRegister }) => {
     const result = await login(email, password);
     
     if (result.success) {
-      // Redirección basada en rol
-      if (result.rol === 'administrador' || result.rol === 'Trainer') {
+      // Redirección basada en los roles EXACTOS de tu BD
+      if (result.rol === 'administrador' || result.rol === 'staff') {
           navigate('/DashboardAdmin');
-      } else if (result.rol === 'Socio') { 
+      } else if (result.rol === 'socio') { 
           navigate('/socio/dashboard');
       }
-      onClose(); // Cerrar el modal tras el login exitoso
+      onClose(); 
     } else {
-      // Mostrar el mensaje de error del mock
       setError(result.error || 'Fallo en la autenticación.');
     }
   };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-md w-full p-8 relative shadow-2xl">
