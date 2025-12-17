@@ -10,10 +10,9 @@ import HeroSection from '../pages/HeroSection'; // Ajustado
 import StatsSection from '../components/StatsSection'; // Ajustado
 import LoginModal from '../components/LoginModal'; 
 import RegisterModal from '../components/RegisterModal'; 
-
-// Mocks de secciones (asumiendo que están definidos aquí)
-const ClassesSection = () => <div className="p-16 text-center bg-neutral-50 text-neutral-700">Sección de Clases (En Desarrollo)</div>;
-const MembershipSection = () => <div className="p-16 text-center bg-white text-neutral-700">Sección de Membresías (En Desarrollo)</div>;
+import ClassesSection from '../components/ClassesSection'; 
+import MembershipSection from '../components/MembershipSection';
+import FooterSection from '../components/FooterSection';
 
 
 const HomePage = () => {
@@ -76,11 +75,11 @@ const HomePage = () => {
                     userName={userName}
                     onRegisterClick={handleRegisterClick}
                 />
-                
                 <StatsSection />
-                
                 <ClassesSection />
                 <MembershipSection />
+                <FooterSection />
+
             </main>
             
             {/* Modales */}
