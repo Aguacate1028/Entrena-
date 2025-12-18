@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { BarChart3, FileText, CreditCard, QrCode } from 'lucide-react';
-import VistaGeneral from './VistaGeneral';
-import Reportes from './Reportes';
-import Pagos from './Pagos';
-import Asistencias from './Asistencias';
+import VistaGeneral from '../admin/VistaGeneral';
+import Reportes from '../admin/Reportes';
+import Pagos from '../admin/Pagos';
+import Asistencias from '../admin/Asistencias';
 
 const DashboardAdmin = () => {
   const [seccionActiva, setSeccionActiva] = useState('general');

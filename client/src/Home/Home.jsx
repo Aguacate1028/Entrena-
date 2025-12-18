@@ -1,4 +1,5 @@
-import HeroSection from '../pages/HeroSection'; 
+import React from 'react';
+import HeroSection from '../components/HeroSection'; // Ajustado a components
 import StatsSection from '../components/StatsSection'; 
 import ClassesSection from '../components/ClassesSection'; 
 import MembershipSection from '../components/MembershipSection';

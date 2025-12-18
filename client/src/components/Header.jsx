@@ -2,27 +2,43 @@ import React, { useState, useMemo } from 'react';
 import { 
   Dumbbell, User, Home, Users, LayoutDashboard, 
   TrendingUp, BookOpen, Bell, ChevronDown, LogOut,
-  Calendar
+  Calendar, CreditCard
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const Header = ({ isLoggedIn, userName, userRole, onLogout }) => {
+const Header = ({ isLoggedIn, userName, userRole, onLogout, onLoginClick, onRegisterClick }) => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   const menuItems = useMemo(() => [
+    // --- PÚBLICO ---
     { id: 'home', label: 'Inicio', icon: Home, path: '/' },
-    { id: 'classes', label: 'Clases', icon: Calendar, authRequired: true, path: '/socio/clases' },
-    { id: 'social', label: 'Comunidad', icon: Users, authRequired: true, path: '/socio/comunidad' },
-    { id: 'progress', label: 'Progreso', icon: TrendingUp, authRequired: true, path: '/socio/progreso' },
-    { id: 'guide', label: 'Guía', icon: BookOpen, authRequired: true, path: '/socio/manual' },
-    { id: 'admin', label: 'Admin', icon: LayoutDashboard, authRequired: true, adminOnly: true, path: '/DashboardAdmin' },
+    
+    // --- SOCIOS (socioOnly: true) ---
+    { id: 'classes', label: 'Clases', icon: Calendar, authRequired: true, socioOnly: true, path: '/socio/clases' },
+    { id: 'social', label: 'Comunidad', icon: Users, authRequired: true, socioOnly: true, path: '/socio/comunidad' },
+    { id: 'progress', label: 'Progreso', icon: TrendingUp, authRequired: true, socioOnly: true, path: '/socio/progreso' },
+    { id: 'guide', label: 'Guía', icon: BookOpen, authRequired: true, socioOnly: true, path: '/socio/manual' },
+
+    // --- ADMIN (adminOnly: true) ---
+    { id: 'admin-dash', label: 'Dashboard', icon: LayoutDashboard, authRequired: true, adminOnly: true, path: '/DashboardAdmin' },
+    { id: 'admin-socios', label: 'Socios', icon: Users, authRequired: true, adminOnly: true, path: '/GestionSocios' },
+    { id: 'admin-pagos', label: 'Pagos', icon: CreditCard, authRequired: true, adminOnly: true, path: '/Pagos' },
   ], []);
 
   const visibleItems = menuItems.filter(item => {
+    // 1. Si requiere auth y no está logueado -> Fuera
     if (item.authRequired && !isLoggedIn) return false;
-    if (item.adminOnly && !(userRole === 'administrador' || userRole === 'staff')) return false;
+
+    // Roles normalizados
+    const isAdmin = userRole === 'administrador' || userRole === 'staff';
+    const isSocio = userRole === 'socio' || userRole === 'cliente';
+
+    // 2. Filtros por Rol
+    if (item.adminOnly && !isAdmin) return false;
+    if (item.socioOnly && !isSocio) return false;
+
     return true;
   });
 
@@ -42,17 +58,17 @@ const Header = ({ isLoggedIn, userName, userRole, onLogout }) => {
           
           <div className="flex items-center gap-2 cursor-pointer group" onClick={() => handleNavigation('/')}>
             <div className="bg-purple-500 p-2 rounded-lg shadow-md shadow-purple-200 transition-transform group-hover:scale-105">
-              <Dumbbell className="w-6 h-6 text-white" />
+                <Dumbbell className="w-6 h-6 text-white" />
             </div>
-            <span className="text-2xl font-bold text-neutral-900 tracking-tight">
-              entrena<span className="text-purple-500">+</span>
+            <span className="text-xl font-bold text-neutral-900 hidden md:block">
+                entrena<span className="text-purple-500">+</span>
             </span>
           </div>
 
-          <nav className="hidden md:flex items-center relative gap-0">
+          <nav className="hidden md:flex items-center relative gap-1">
             {activeIndex !== -1 && (
               <div 
-                className="absolute h-10 bg-purple-500 rounded-xl transition-all duration-300 ease-in-out shadow-lg shadow-purple-200"
+                className="absolute h-9 bg-purple-500 rounded-lg transition-all duration-300 ease-in-out shadow-lg shadow-purple-200"
                 style={{ 
                   width: `${100 / visibleItems.length}%`,
                   transform: `translateX(${activeIndex * 100}%)`,
@@ -65,40 +81,35 @@ const Header = ({ isLoggedIn, userName, userRole, onLogout }) => {
               <button
                 key={item.id}
                 onClick={() => handleNavigation(item.path)}
-                className={`relative z-10 flex items-center justify-center gap-2 px-4 py-2 rounded-xl transition-colors duration-300 min-w-[110px] h-10 ${
+                className={`relative z-10 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors duration-300 flex-1 min-w-[90px] ${
                   activeIndex !== -1 && visibleItems[activeIndex].id === item.id ? 'text-white' : 'text-neutral-500 hover:text-neutral-800'
                 }`}
               >
-                <item.icon size={18} />
-                <span className="font-bold text-sm">{item.label}</span>
+                <item.icon size={16} />
+                <span className="font-bold text-xs lg:text-sm">{item.label}</span>
               </button>
             ))}
           </nav>
 
           <div className="flex items-center gap-4">
             {!isLoggedIn ? (
-              <div className="flex gap-3">
-                <button onClick={() => navigate('/login')} className="text-neutral-700 font-bold text-sm hover:text-purple-600 transition-colors">
+              <div className="flex gap-2">
+                <button onClick={onLoginClick} className="text-neutral-700 font-bold text-sm hover:text-purple-600 transition-colors px-3 py-2">
                   Iniciar sesión
                 </button>
-                <button onClick={() => navigate('/login')} className="px-6 py-2.5 bg-purple-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-purple-200 hover:bg-purple-600 transition-all">
+                <button onClick={onRegisterClick} className="px-5 py-2 bg-purple-500 text-white rounded-lg font-bold text-sm shadow-lg shadow-purple-200 hover:bg-purple-600 transition-all">
                   Registrarse
                 </button>
               </div>
             ) : (
               <div className="flex items-center gap-3 relative">
-                <button className="p-2 text-neutral-400 hover:bg-neutral-100 rounded-full transition-colors relative">
-                  <Bell size={20} />
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-purple-500 rounded-full border-2 border-white"></span>
-                </button>
-
                 <div className="relative">
                   <button 
                     onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                    className="flex items-center gap-2 p-1.5 pr-3 bg-neutral-50 rounded-full border border-neutral-100 hover:border-purple-200 transition-all"
+                    className="flex items-center gap-2 p-1 pr-3 bg-neutral-50 rounded-full border border-neutral-100 hover:border-purple-200 transition-all"
                   >
-                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md">
-                      {userName.charAt(0).toUpperCase()}
+                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md uppercase">
+                      {userName.charAt(0)}
                     </div>
                     <div className="hidden lg:block text-left">
                       <p className="text-[11px] font-bold text-neutral-900 leading-none mb-0.5">{userName}</p>
@@ -107,25 +118,21 @@ const Header = ({ isLoggedIn, userName, userRole, onLogout }) => {
                     <ChevronDown size={14} className={`text-neutral-400 transition-transform duration-300 ${showProfileDropdown ? 'rotate-180' : ''}`} />
                   </button>
 
-                  <div className={`absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-neutral-100 py-2 z-[60] transition-all duration-300 origin-top-right ${
+                  <div className={`absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-xl border border-neutral-100 py-2 z-[60] transition-all duration-300 origin-top-right ${
                     showProfileDropdown ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
                   }`}>
-                    <div className="px-4 py-3 border-b border-neutral-50 mb-1">
-                      <p className="text-xs font-bold text-neutral-900">{userName}</p>
-                    </div>
-                    
-                    <button 
-                      onClick={() => { navigate('/socio/perfil'); setShowProfileDropdown(false); }}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-600 hover:bg-purple-50 hover:text-purple-600 transition-all font-semibold"
-                    >
-                      <User size={16} /> Mi Perfil
-                    </button>
-
+                    {userRole === 'socio' && (
+                        <button 
+                        onClick={() => { navigate('/socio/perfil'); setShowProfileDropdown(false); }}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-neutral-600 hover:bg-purple-50 hover:text-purple-600 transition-all font-semibold"
+                        >
+                        <User size={16} /> Mi Perfil
+                        </button>
+                    )}
                     <div className="h-px bg-neutral-100 my-1 mx-4"></div>
-                    
                     <button 
                       onClick={() => { onLogout(); setShowProfileDropdown(false); navigate('/'); }}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 font-bold transition-all"
+                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-50 font-bold transition-all"
                     >
                       <LogOut size={16} /> Cerrar sesión
                     </button>
