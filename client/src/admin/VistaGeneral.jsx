@@ -43,6 +43,10 @@ const VistaGeneral = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="mb-8">
+          <h1 className="text-2xl font-bold text-neutral-900">Panel de Vista General</h1>
+          <p className="text-neutral-500">Resumen de tu gimnasio</p>
+        </div>
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
