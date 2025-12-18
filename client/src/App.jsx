@@ -5,11 +5,16 @@ import ProtectedRoute from './components/ProtectedRoute';
 import MainLayout from './components/MainLayout';
 
 // Vistas Públicas
-import Home from './Home/Home'; // Actualizado según estructura src/Home/Home.jsx
+import Home from './Home/Home'; 
 
-// Vistas de Administración (Componentes Modulares)
-import DashboardAdmin from "./Home/DashboardAdmin"; // Centralizador de administración
+// Vistas de Administración
+import VistaGeneral from './admin/VistaGeneral';
+import Reportes from './admin/Reportes';
+import Pagos from './admin/Pagos';
+import Asistencias from './admin/Asistencias';
+import Empleados from './admin/Empleados';
 import GestionSocios from './pages/GestionSocios';
+import Casilleros from './admin/Casilleros';
 
 // Vistas de Socios
 import DashboardSocio from './pages/DashboardSocio';
@@ -26,7 +31,6 @@ const Unauthorized = () => <div className="min-h-screen flex items-center justif
 const AppContent = () => {
     return (
         <Routes>
-            {/* Todas las rutas usan MainLayout para el Header con indicador animado */}
             <Route element={<MainLayout />}>
                 <Route path="/" element={<Home />} />
                 
@@ -39,20 +43,22 @@ const AppContent = () => {
                 <Route path="/socio/manual" element={<ProtectedRoute requiredRole="socio"><ManualMaquinas /></ProtectedRoute>} />
                 <Route path="/socio/comunidad" element={<ProtectedRoute requiredRole="socio"><Comunidad /></ProtectedRoute>} />
 
-                {/* RUTAS ADMIN - Centralizadas en DashboardAdmin con tabs animadas */}
-                <Route path="/DashboardAdmin" element={
-                    <ProtectedRoute requiredRole="administrador">
-                        <DashboardAdmin />
-                    </ProtectedRoute>
-                } />
-                <Route path="/GestionSocios" element={
-                    <ProtectedRoute requiredRole="administrador">
-                        <GestionSocios />
-                    </ProtectedRoute>
-                } />
+                {/* RUTAS ADMIN*/}
+                <Route path="/VistaGeneral" element={<ProtectedRoute requiredRole="administrador"><VistaGeneral /></ProtectedRoute>} />
+                <Route path="/Reportes" element={<ProtectedRoute requiredRole="administrador"><Reportes /></ProtectedRoute>} />
+                <Route path="/Pagos" element={<ProtectedRoute requiredRole="administrador"><Pagos /></ProtectedRoute>} />
+                <Route path="/Asistencias" element={<ProtectedRoute requiredRole="administrador"><Asistencias /></ProtectedRoute>} />
+                <Route path="/Empleados" element={<ProtectedRoute requiredRole="administrador"><Empleados /></ProtectedRoute>} />
+                <Route path="/GestionSocios" element={<ProtectedRoute requiredRole="administrador"><GestionSocios /></ProtectedRoute>} />
+
+                {/* RUTAS STAFF*/}
+                <Route path="/staff/VistaGeneral" element={<ProtectedRoute requiredRole="staff"><VistaGeneral /></ProtectedRoute>} />
+                <Route path="/staff/Pagos" element={<ProtectedRoute requiredRole="staff"><Pagos /></ProtectedRoute>} />
+                <Route path="/staff/Asistencias" element={<ProtectedRoute requiredRole="staff"><Asistencias /></ProtectedRoute>} />
+                <Route path="/staff/GestionSocios" element={<ProtectedRoute requiredRole="staff"><GestionSocios /></ProtectedRoute>} />
+                <Route path="/staff/Casilleros" element={<ProtectedRoute requiredRole="staff"><Casilleros /></ProtectedRoute>} />
             </Route>
 
-            {/* Rutas de estado */}
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="*" element={<NotFound />} />
         </Routes>

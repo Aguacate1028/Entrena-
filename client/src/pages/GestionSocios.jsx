@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import AdminSidebar from '../admin/AdminSidebar';
 
 const GestionSocios = () => {
   const [socios, setSocios] = useState(MOCK_SOCIOS_LIST);

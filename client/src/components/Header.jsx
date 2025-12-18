@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { 
   Dumbbell, User, Home, Users, LayoutDashboard, 
   TrendingUp, BookOpen, Bell, ChevronDown, LogOut,
-  Calendar, CreditCard, Briefcase, FileText, QrCode
+  Calendar, CreditCard, Briefcase, FileText, QrCode,
+  LockIcon
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -13,7 +14,6 @@ const Header = ({ isLoggedIn, userName, userRole, onLogout, onLoginClick, onRegi
 
   // Configuración de menús por Rol
   const menuItems = useMemo(() => [
-    // --- PÚBLICO (Sin sesión) ---
     { id: 'home', label: 'Inicio', icon: Home, path: '/', public: true },
     
     // --- SOCIO ---
@@ -23,16 +23,19 @@ const Header = ({ isLoggedIn, userName, userRole, onLogout, onLoginClick, onRegi
     { id: 'guide', label: 'Guía', icon: BookOpen, path: '/socio/manual', role: 'socio' },
 
     // --- STAFF ---
-    { id: 'staff-dash', label: 'Vista General', icon: LayoutDashboard, path: '/DashboardAdmin', role: 'staff' },
-    { id: 'staff-pagos', label: 'Pagos', icon: CreditCard, path: '/Pagos', role: 'staff' },
-    { id: 'staff-asistencias', label: 'Asistencias', icon: QrCode, path: '/Asistencias', role: 'staff' },
+    { id: 'staff-dash', label: 'Vista General', icon: LayoutDashboard, path: '/staff/VistaGeneral', role: 'staff' },
+    { id: 'staff-pagos', label: 'Pagos', icon: CreditCard, path: '/staff/Pagos', role: 'staff' },
+    { id: 'staff-asistencias', label: 'Asistencias', icon: QrCode, path: '/staff/Asistencias', role: 'staff' },
+    { id: 'staff-gestion', label: 'Socios', icon: Users, path: '/staff/GestionSocios', role: 'staff' },
+    { id: 'staff-casilleros', label: 'Casilleros', icon: LockIcon, path: '/staff/Casilleros', role: 'staff' },
 
     // --- ADMINISTRADOR ---
-    { id: 'admin-dash', label: 'Vista General', icon: LayoutDashboard, path: '../admin/VistaGeneral', role: 'administrador' },
+    { id: 'admin-dash', label: 'Vista General', icon: LayoutDashboard, path: '/VistaGeneral', role: 'administrador' },
     { id: 'admin-reportes', label: 'Reportes', icon: FileText, path: '/Reportes', role: 'administrador' },
     { id: 'admin-pagos', label: 'Pagos', icon: CreditCard, path: '/Pagos', role: 'administrador' },
     { id: 'admin-asistencias', label: 'Asistencias', icon: QrCode, path: '/Asistencias', role: 'administrador' },
-    { id: 'admin-empleados', label: 'Empleados', icon: Briefcase, path: '/GestionEmpleados', role: 'administrador' },
+    { id: 'admin-empleados', label: 'Empleados', icon: Briefcase, path: '/Empleados', role: 'administrador' },
+    { id: 'admin-gestion', label: 'Socios', icon: Users, path: '/GestionSocios', role: 'administrador' },
   ], []);
 
   // Filtrado lógico de items visibles según el estado de la sesión
@@ -126,19 +129,28 @@ const Header = ({ isLoggedIn, userName, userRole, onLogout, onLoginClick, onRegi
                   <div className={`absolute right-0 mt-3 w-52 bg-white rounded-2xl shadow-2xl border border-neutral-100 py-2 z-[60] transition-all duration-300 origin-top-right ${
                     showProfileDropdown ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
                   }`}>
+                    {/* Lógica condicional de opciones por rol */}
+                    {userRole === 'socio' && (
+                      <>
+                        <button 
+                          onClick={() => handleNavigation('/socio/perfil')}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-600 hover:bg-purple-50 hover:text-purple-600 transition-all font-semibold"
+                        >
+                          <User size={16} /> Mi Cuenta
+                        </button>
+                        <div className="h-px bg-neutral-100 my-1 mx-4"></div>
+                      </>
+                    )}
                     <button 
-                      onClick={() => handleNavigation(userRole === 'socio' ? '/socio/perfil' : '/DashboardAdmin')}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-600 hover:bg-purple-50 hover:text-purple-600 transition-all font-semibold"
-                    >
-                      <User size={16} /> Mi Cuenta
-                    </button>
-                    <div className="h-px bg-neutral-100 my-1 mx-4"></div>
-                    <button 
-                      onClick={() => { onLogout(); setShowProfileDropdown(false); navigate('/'); }}
+                      onClick={() => { 
+                        onLogout(); // 1. Limpia el estado
+                        setShowProfileDropdown(false); // 2. Cierra el menú
+                        navigate('/', { replace: true }); // 3. Redirige a Home reemplazando el historial
+                      }}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 font-bold transition-all"
                     >
-                      <LogOut size={16} /> Cerrar sesión
-                    </button>
+                    <LogOut size={16} /> Cerrar sesión
+                  </button>
                   </div>
                 </div>
               </div>

@@ -30,10 +30,9 @@ const RegisterModal = ({ onClose, onRegister, onSwitchToLogin }) => {
     if (name && email && password && birthDate && role) {
       // 1. Ejecutamos la lógica de registro
       onRegister(name, email, password, birthDate, role);
-      // 2. Cerramos este modal Register
-      onClose();
-      // 3. Disparamos el cambio al modal de Login
-      onSwitchToLogin();
+      // Redirección simple a Home para todos los usuarios
+      navigate('/'); 
+      onClose(); // Cierra el modal
     }
   };
 

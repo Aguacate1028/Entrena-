@@ -42,7 +42,7 @@ const VistaGeneral = () => {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto py-8">
       <div className="mb-8">
           <h1 className="text-2xl font-bold text-neutral-900">Panel de Vista General</h1>
           <p className="text-neutral-500">Resumen de tu gimnasio</p>
