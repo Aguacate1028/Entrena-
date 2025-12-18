@@ -12,7 +12,10 @@ CREATE TABLE usuarios (
     password_hash TEXT NOT NULL,
     rol VARCHAR(20) NOT NULL CHECK (rol IN ('administrador', 'staff', 'socio')),
     fecha_nacimiento DATE NOT NULL,
-    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    telefono VARCHAR(20),
+    foto_perfil_url TEXT DEFAULT 'https://via.placeholder.com/150',
+    direccion TEXT
 );
 -- Vista para reportes de edad (Útil para el Dueño)
 CREATE OR REPLACE VIEW vista_usuarios_edad AS
@@ -25,7 +28,7 @@ FROM usuarios;
 
 
 -- 2. Tabla de Membresías (Catálogo de Planes)
-CREATE TABLE IF NOT EXISTS membresias (
+CREATE TABLE membresias (
     id_membresia SERIAL PRIMARY KEY,
     tipo VARCHAR(50) NOT NULL, -- Ej: Mensual, Anual, Estudiante
     precio DECIMAL(10,2) NOT NULL,
@@ -34,7 +37,7 @@ CREATE TABLE IF NOT EXISTS membresias (
 );
 
 -- 3. Tabla de Suscripciones (Vinculación Usuario-Membresía)
-CREATE TABLE IF NOT EXISTS suscripciones (
+CREATE TABLE suscripciones (
     id_suscripcion SERIAL PRIMARY KEY,
     id_usuario INTEGER REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
     id_membresia INTEGER REFERENCES membresias(id_membresia),
@@ -44,7 +47,7 @@ CREATE TABLE IF NOT EXISTS suscripciones (
 );
 
 -- 4. Tabla de Pagos (Registro financiero para visibilidad del Dueño)
-CREATE TABLE IF NOT EXISTS pagos (
+CREATE TABLE pagos (
     id_pago SERIAL PRIMARY KEY,
     id_suscripcion INTEGER REFERENCES suscripciones(id_suscripcion) ON DELETE SET NULL,
     monto DECIMAL(10,2) NOT NULL,
@@ -54,7 +57,7 @@ CREATE TABLE IF NOT EXISTS pagos (
 );
 
 -- 5. Tabla de Asistencia (Sustituye la libreta física de registro)
-CREATE TABLE IF NOT EXISTS asistencia (
+CREATE TABLE asistencia (
     id_asistencia SERIAL PRIMARY KEY,
     id_usuario INTEGER REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
     fecha DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -63,7 +66,7 @@ CREATE TABLE IF NOT EXISTS asistencia (
 );
 
 -- 6. Tabla de Inventario de Equipos
-CREATE TABLE IF NOT EXISTS equipos (
+CREATE TABLE equipos (
     id_equipo SERIAL PRIMARY KEY,
     nombre_maquina VARCHAR(100) NOT NULL,
     descripcion TEXT,
@@ -72,7 +75,7 @@ CREATE TABLE IF NOT EXISTS equipos (
 );
 
 -- 7. Tabla de Reportes de Fallas (Mejora la comunicación Cliente-Staff)
-CREATE TABLE IF NOT EXISTS reportes_fallas (
+CREATE TABLE reportes_fallas (
     id_reporte SERIAL PRIMARY KEY,
     id_usuario INTEGER REFERENCES usuarios(id_usuario), -- Quién reporta
     id_equipo INTEGER REFERENCES equipos(id_equipo),
@@ -82,14 +85,14 @@ CREATE TABLE IF NOT EXISTS reportes_fallas (
 );
 
 -- 8. Tabla de Casilleros (Gestión de Pertenencias)
-CREATE TABLE IF NOT EXISTS casilleros (
+CREATE TABLE casilleros (
     id_casillero SERIAL PRIMARY KEY,
     numero_locker VARCHAR(10) UNIQUE NOT NULL,
     estado VARCHAR(20) DEFAULT 'disponible' CHECK (estado IN ('disponible', 'ocupado', 'mantenimiento'))
 );
 
 -- 9. Tabla de Asignación de Casilleros (Control de uso)
-CREATE TABLE IF NOT EXISTS asignacion_casilleros (
+CREATE TABLE asignacion_casilleros (
     id_asignacion SERIAL PRIMARY KEY,
     id_usuario INTEGER REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
     id_casillero INTEGER REFERENCES casilleros(id_casillero) ON DELETE CASCADE,
