@@ -5,12 +5,11 @@ import ProtectedRoute from './components/ProtectedRoute';
 import MainLayout from './components/MainLayout';
 
 // Vistas Públicas
-import HomePage from './pages/Home';
+import Home from './Home/Home'; // Actualizado según estructura src/Home/Home.jsx
 
-// Vistas de Administración
-import DashboardAdmin from "./components/admin/DashboardAdmin";
+// Vistas de Administración (Componentes Modulares)
+import DashboardAdmin from "./Home/DashboardAdmin"; // Centralizador de administración
 import GestionSocios from './pages/GestionSocios';
-const Pagos = () => <div className="p-20 text-center"><h1>Gestión de Pagos</h1></div>; // Placeholder
 
 // Vistas de Socios
 import DashboardSocio from './pages/DashboardSocio';
@@ -21,15 +20,15 @@ import ProgresoRutinas from './pages/ProgresoRutinas';
 import ManualMaquinas from './pages/ManualMaquinas'; 
 import Comunidad from './pages/Comunidad';
 
-const NotFound = () => <div className="min-h-screen flex items-center justify-center"><h1>404 | Página no encontrada</h1></div>;
-const Unauthorized = () => <div className="min-h-screen flex items-center justify-center text-red-500"><h1>403 | Acceso Denegado</h1></div>;
+const NotFound = () => <div className="min-h-screen flex items-center justify-center font-bold text-2xl">404 | Página no encontrada</div>;
+const Unauthorized = () => <div className="min-h-screen flex items-center justify-center text-red-500 font-bold text-2xl">403 | Acceso Denegado</div>;
 
 const AppContent = () => {
     return (
         <Routes>
-            {/* Todas las rutas usan MainLayout para tener el Header */}
+            {/* Todas las rutas usan MainLayout para el Header con indicador animado */}
             <Route element={<MainLayout />}>
-                <Route path="/" element={<HomePage />} />
+                <Route path="/" element={<Home />} />
                 
                 {/* RUTAS SOCIO */}
                 <Route path="/socio/dashboard" element={<ProtectedRoute requiredRole="socio"><DashboardSocio /></ProtectedRoute>} />
@@ -40,13 +39,20 @@ const AppContent = () => {
                 <Route path="/socio/manual" element={<ProtectedRoute requiredRole="socio"><ManualMaquinas /></ProtectedRoute>} />
                 <Route path="/socio/comunidad" element={<ProtectedRoute requiredRole="socio"><Comunidad /></ProtectedRoute>} />
 
-                {/* RUTAS ADMIN - Ahora accesibles desde el Header */}
-                <Route path="/DashboardAdmin" element={<ProtectedRoute requiredRole="administrador"><DashboardAdmin /></ProtectedRoute>} />
-                <Route path="/GestionSocios" element={<ProtectedRoute requiredRole="administrador"><GestionSocios /></ProtectedRoute>} />
-                <Route path="/Pagos" element={<ProtectedRoute requiredRole="administrador"><Pagos /></ProtectedRoute>} />
+                {/* RUTAS ADMIN - Centralizadas en DashboardAdmin con tabs animadas */}
+                <Route path="/DashboardAdmin" element={
+                    <ProtectedRoute requiredRole="administrador">
+                        <DashboardAdmin />
+                    </ProtectedRoute>
+                } />
+                <Route path="/GestionSocios" element={
+                    <ProtectedRoute requiredRole="administrador">
+                        <GestionSocios />
+                    </ProtectedRoute>
+                } />
             </Route>
 
-            {/* Rutas de error */}
+            {/* Rutas de estado */}
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="*" element={<NotFound />} />
         </Routes>

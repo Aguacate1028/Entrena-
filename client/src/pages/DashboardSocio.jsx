@@ -1,6 +1,5 @@
 import React, { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { MOCK_SOCIO_DATA } from '../mocks/mockData';
 import SocioSidebar from '../components/SocioSidebar'; 
 
 const DashboardSocio = () => {
