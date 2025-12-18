@@ -1,4 +1,3 @@
-import React from 'react';
 import { ArrowRight, Calendar, TrendingUp, Award } from 'lucide-react';
 
 const HeroSection = ({ isLoggedIn, userName, onRegisterClick }) => {

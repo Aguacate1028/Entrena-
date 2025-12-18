@@ -1,38 +1,46 @@
-// src/components/Header.jsx
 import React, { useState, useMemo } from 'react';
 import { 
   Dumbbell, User, Home, Users, LayoutDashboard, 
-  TrendingUp, BookOpen, Bell, ChevronDown, LogOut 
+  TrendingUp, BookOpen, Bell, ChevronDown, LogOut,
+  Calendar
 } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-const Header = ({ isLoggedIn, userName, userRole, currentView, onLoginClick, onRegisterClick, onLogout, onViewChange }) => {
+const Header = ({ isLoggedIn, userName, userRole, onLogout }) => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Definición de ítems para calcular el desplazamiento
   const menuItems = useMemo(() => [
-    { id: 'home', label: 'Inicio', icon: Home },
-    { id: 'social', label: 'Comunidad', icon: Users, authRequired: true },
-    { id: 'progress', label: 'Progreso', icon: TrendingUp, authRequired: true },
-    { id: 'guide', label: 'Guía', icon: BookOpen, authRequired: true },
-    { id: 'admin', label: 'Admin', icon: LayoutDashboard, authRequired: true, adminOnly: true },
+    { id: 'home', label: 'Inicio', icon: Home, path: '/' },
+    { id: 'classes', label: 'Clases', icon: Calendar, authRequired: true, path: '/socio/clases' },
+    { id: 'social', label: 'Comunidad', icon: Users, authRequired: true, path: '/socio/comunidad' },
+    { id: 'progress', label: 'Progreso', icon: TrendingUp, authRequired: true, path: '/socio/progreso' },
+    { id: 'guide', label: 'Guía', icon: BookOpen, authRequired: true, path: '/socio/manual' },
+    { id: 'admin', label: 'Admin', icon: LayoutDashboard, authRequired: true, adminOnly: true, path: '/DashboardAdmin' },
   ], []);
 
-  // Filtrar ítems visibles según estado y rol
   const visibleItems = menuItems.filter(item => {
     if (item.authRequired && !isLoggedIn) return false;
     if (item.adminOnly && !(userRole === 'administrador' || userRole === 'staff')) return false;
     return true;
   });
 
-  const activeIndex = visibleItems.findIndex(item => item.id === currentView);
+  const activeIndex = visibleItems.findIndex(item => {
+      if (item.path === '/') return location.pathname === '/';
+      return location.pathname.startsWith(item.path);
+  });
+
+  const handleNavigation = (path) => {
+      navigate(path);
+  };
 
   return (
     <header className="bg-white border-b border-neutral-100 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           
-          {/* Logo */}
-          <div className="flex items-center gap-2 cursor-pointer group" onClick={() => onViewChange('home')}>
+          <div className="flex items-center gap-2 cursor-pointer group" onClick={() => handleNavigation('/')}>
             <div className="bg-purple-500 p-2 rounded-lg shadow-md shadow-purple-200 transition-transform group-hover:scale-105">
               <Dumbbell className="w-6 h-6 text-white" />
             </div>
@@ -41,7 +49,6 @@ const Header = ({ isLoggedIn, userName, userRole, currentView, onLoginClick, onR
             </span>
           </div>
 
-          {/* Navegación con Indicador Deslizante */}
           <nav className="hidden md:flex items-center relative gap-0">
             {activeIndex !== -1 && (
               <div 
@@ -57,9 +64,9 @@ const Header = ({ isLoggedIn, userName, userRole, currentView, onLoginClick, onR
             {visibleItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => onViewChange(item.id)}
-                className={`relative z-10 flex items-center justify-center gap-2 px-6 py-2 rounded-xl transition-colors duration-300 min-w-[120px] h-10 ${
-                  currentView === item.id ? 'text-white' : 'text-neutral-500 hover:text-neutral-800'
+                onClick={() => handleNavigation(item.path)}
+                className={`relative z-10 flex items-center justify-center gap-2 px-4 py-2 rounded-xl transition-colors duration-300 min-w-[110px] h-10 ${
+                  activeIndex !== -1 && visibleItems[activeIndex].id === item.id ? 'text-white' : 'text-neutral-500 hover:text-neutral-800'
                 }`}
               >
                 <item.icon size={18} />
@@ -68,14 +75,13 @@ const Header = ({ isLoggedIn, userName, userRole, currentView, onLoginClick, onR
             ))}
           </nav>
 
-          {/* Área de Perfil */}
           <div className="flex items-center gap-4">
             {!isLoggedIn ? (
               <div className="flex gap-3">
-                <button onClick={onLoginClick} className="text-neutral-700 font-bold text-sm hover:text-purple-600 transition-colors">
+                <button onClick={() => navigate('/login')} className="text-neutral-700 font-bold text-sm hover:text-purple-600 transition-colors">
                   Iniciar sesión
                 </button>
-                <button onClick={onRegisterClick} className="px-6 py-2.5 bg-purple-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-purple-200 hover:bg-purple-600 transition-all">
+                <button onClick={() => navigate('/login')} className="px-6 py-2.5 bg-purple-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-purple-200 hover:bg-purple-600 transition-all">
                   Registrarse
                 </button>
               </div>
@@ -101,18 +107,15 @@ const Header = ({ isLoggedIn, userName, userRole, currentView, onLoginClick, onR
                     <ChevronDown size={14} className={`text-neutral-400 transition-transform duration-300 ${showProfileDropdown ? 'rotate-180' : ''}`} />
                   </button>
 
-                  {/* Dropdown con Animación de Escala y Opacidad */}
                   <div className={`absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-neutral-100 py-2 z-[60] transition-all duration-300 origin-top-right ${
                     showProfileDropdown ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
                   }`}>
                     <div className="px-4 py-3 border-b border-neutral-50 mb-1">
                       <p className="text-xs font-bold text-neutral-900">{userName}</p>
-                      <p className="text-[10px] text-neutral-400 uppercase tracking-widest">{userRole}</p>
                     </div>
                     
-                    {/* Botón Mi Perfil */}
                     <button 
-                      onClick={() => { onViewChange('profile'); setShowProfileDropdown(false); }}
+                      onClick={() => { navigate('/socio/perfil'); setShowProfileDropdown(false); }}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-600 hover:bg-purple-50 hover:text-purple-600 transition-all font-semibold"
                     >
                       <User size={16} /> Mi Perfil
@@ -120,9 +123,8 @@ const Header = ({ isLoggedIn, userName, userRole, currentView, onLoginClick, onR
 
                     <div className="h-px bg-neutral-100 my-1 mx-4"></div>
                     
-                    {/* Botón Cerrar Sesión */}
                     <button 
-                      onClick={() => { onLogout(); setShowProfileDropdown(false); }}
+                      onClick={() => { onLogout(); setShowProfileDropdown(false); navigate('/'); }}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 font-bold transition-all"
                     >
                       <LogOut size={16} /> Cerrar sesión
