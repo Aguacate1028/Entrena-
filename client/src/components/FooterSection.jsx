@@ -3,7 +3,7 @@ import { Dumbbell } from 'lucide-react'; // Importamos el icono para el logo
 
 const FooterSection = () => {
     return (
-        <footer className="bg-white border-t border-neutral-100 py-12">
+        <footer className="bg-white border-t border-neutral-200 py-12">
             <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8 text-neutral-500 text-sm">
                 
                 {/* Logo entrena+ igual al Header */}

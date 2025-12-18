@@ -103,3 +103,29 @@ app.post('/api/login', async (req, res) => {
 app.listen(5000, () => {
     console.log("Servidor escuchando en el puerto 5000");
 });
+
+
+// --- RUTA PARA ESTADÍSTICAS DEL ADMIN ---
+app.get('/api/admin/stats', async (req, res) => {
+    try {
+        // Consultar total de usuarios de la tabla 'usuarios' en Supabase
+        const { count: totalUsers } = await supabase
+            .from('usuarios')
+            .select('*', { count: 'exact', head: true });
+
+        // Consultar suma de pagos de la tabla 'pagos'
+        const { data: pagos } = await supabase.from('pagos').select('monto');
+        const ingresos = pagos?.reduce((acc, curr) => acc + Number(curr.monto), 0) || 0;
+
+        res.json({
+            success: true,
+            stats: {
+                miembros: totalUsers,
+                ingresos: ingresos,
+                asistenciaHoy: 0 // Se completará con la tabla 'asistencia'
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ error: "Error al obtener estadísticas" });
+    }
+});

@@ -15,7 +15,7 @@ const MembershipSection = () => {
     ];
 
     return (
-        <section className="py-24 bg-neutral-50">
+        <section id="membership-section" className="py-24 bg-white">
             <div className="max-w-7xl mx-auto px-4">
                 <div className="text-center mb-16">
                     <h2 className="text-sm font-bold text-neutral-900 uppercase tracking-widest mb-2">Elige tu Plan</h2>

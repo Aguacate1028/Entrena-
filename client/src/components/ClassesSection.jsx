@@ -10,7 +10,7 @@ const ClassesSection = () => {
     ];
 
     return (
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-neutral-100">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16">
                     <h2 className="text-sm font-bold text-purple-600 uppercase tracking-widest mb-2">Nuestras Clases</h2>

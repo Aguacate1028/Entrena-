@@ -10,7 +10,7 @@ const NotFound = () => <div className="min-h-screen flex items-center justify-ce
 const Unauthorized = () => <div className="min-h-screen flex items-center justify-center bg-dark-bg text-white"><h1 className="text-3xl font-bold text-red-500">403 | Acceso Denegado</h1></div>;
 
 // Vistas de Administración
-import DashboardAdmin from './pages/DashboardAdmin';
+import DashboardAdmin from "./components/admin/DashboardAdmin";
 import GestionSocios from './pages/GestionSocios';
 // Mocks para otras vistas de administrador que usan el sidebar (usando AdminSidebar) (esto lo quitamos cuando ya tengamos back)
 const Pagos = () => <div className="flex min-h-screen bg-dark-bg"><AdminSidebar /><main className="flex-1 p-8 text-white">Gestión de Pagos (En Desarrollo)</main></div>;
@@ -33,21 +33,18 @@ const AppContent = () => {
     const { isAuthenticated, user } = useContext(AuthContext);
 
     const getRedirectRoute = () => {
-        if (!isAuthenticated) return 'null';
+        if (!isAuthenticated) return '/';
         // REDIRECCIÓN DEL STAFF (administrador o staff)
         if (user?.rol === 'administrador' || user?.rol === 'staff') return '/DashboardAdmin';
         // REDIRECCIÓN DEL SOCIO
         if (user?.rol === 'socio') return '/socio/dashboard'; 
-        return 'null'; 
+        return '/'; 
     };
     
     return (
         <Routes>
             {/* Si está autenticado, redirige a su panel; si no, muestra Home siempre */}
-            <Route 
-                path="/" 
-                element={isAuthenticated ? <Navigate to={getRedirectRoute()} replace /> : <HomePage />} 
-            />
+            <Route path="/" element={<HomePage />} />
             {/* Rutas Públicas */}
             <Route path="/login" element={<LoginModal />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
