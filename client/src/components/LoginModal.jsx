@@ -17,7 +17,6 @@ const LoginModal = ({ onClose, onSwitchToRegister }) => {
     const result = await login(email, password);
     
     if (result.success) {
-      // Redirección simple a Home para todos los usuarios
       navigate('/'); 
       onClose(); // Cierra el modal
     } else {
