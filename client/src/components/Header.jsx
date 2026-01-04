@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, Dumbbell, CreditCard, Info, Users, TrendingUp, BookOpen, 
   LayoutDashboard, QrCode, LockIcon, FileText, Briefcase,
-  LogOut, User, ChevronDown, Bell, Check, Clock,BadgeInfo
+  LogOut, User, ChevronDown, Bell, Check, Clock, BadgeInfo
 } from 'lucide-react';
 import logoImg from '../img/logo.png'; 
 import { 
@@ -30,7 +30,7 @@ const Header = ({
     isLoggedIn, 
     user,         
     userName,    
-    userRole, 
+    userRole, // 'socio', 'staff', 'administrador'
     onLogout, 
     onLoginClick, 
     onRegisterClick 
@@ -38,18 +38,20 @@ const Header = ({
     const navigate = useNavigate();
     const location = useLocation();
     
-    // Obtener ID de forma segura (Prioriza user.id_usuario, luego user.id)
     const currentUserId = user?.id_usuario || user?.id;
 
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
     const [showNotifDropdown, setShowNotifDropdown] = useState(false);
     const [notifications, setNotifications] = useState([]); 
 
-    // --- CARGAR DATOS ---
     const loadNotificaciones = async () => {
-        if (!currentUserId) return; // Si no hay ID (porque user es null), no carga notificaciones
-        const data = await obtenerNotificacionesRequest(currentUserId);
-        setNotifications(data);
+        if (!currentUserId || !isLoggedIn) return;
+        try {
+            const data = await obtenerNotificacionesRequest(currentUserId);
+            setNotifications(data || []);
+        } catch (error) {
+            console.error("Error al cargar notificaciones:", error);
+        }
     };
 
     useEffect(() => {
@@ -60,8 +62,7 @@ const Header = ({
         }
     }, [isLoggedIn, currentUserId]);
 
-    // --- ACCIONES NOTIFICACIONES ---
-    const unreadCount = notifications.filter(n => n.leido === false).length; // Supabase devuelve booleano true/false
+    const unreadCount = notifications.filter(n => n.leido === false).length;
 
     const handleMarkRead = async (id) => {
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, leido: true } : n));
@@ -73,34 +74,43 @@ const Header = ({
         await marcarTodasLeidasRequest(currentUserId);
     };
 
-    // --- MENÚS ---
+    // --- LÓGICA DE MENÚS POR ROL ---
     const menuItems = useMemo(() => {
+        // Items para visitantes
         const publicItems = [
             { id: 'home', label: 'Inicio', icon: Home, path: '/' },
             { id: 'clases', label: 'Clases', icon: Dumbbell, path: '/clases' },
-            { id: 'planes', label: 'Planes', icon: CreditCard, path: '/membresias' },
+            { id: 'planes', label: 'Membresías', icon: CreditCard, path: '/membresias' },
             { id: 'nosotros', label: 'Nosotros', icon: Info, path: '/informacion' },
         ];
+
+        // Diccionario de rutas privadas
         const privateItems = [
-            { id: 'home', label: 'Anuncios', icon: BadgeInfo, path: '/', role: 'socio' },
+            // SOCIO
+            { id: 's-anuncios', label: 'Anuncios', icon: BadgeInfo, path: '/', role: 'socio' },
             { id: 's-clases', label: 'Clases', icon: Dumbbell, path: '/clases', role: 'socio' },
             { id: 's-comunidad', label: 'Comunidad', icon: Users, path: '/comunidad', role: 'socio' },
             { id: 's-progreso', label: 'Progreso', icon: TrendingUp, path: '/progreso', role: 'socio' },
-            { id: 's-manual', label: 'Guía', icon: BookOpen, path: '/guia', role: 'socio' },
-            { id: 's-planes', label: 'Membresías', icon: CreditCard, path: '/membresias', role: 'socio' },
-            { id: 's-planes', label: 'Reportes', icon: FileText, path: '/reportes', role: 'socio' },
-            { id: 'st-dash', label: 'Panel', icon: LayoutDashboard, path: '/dashboard', role: 'staff' },
-            { id: 'st-pagos', label: 'Cobros', icon: CreditCard, path: '/pagos', role: 'staff' },
-            { id: 'st-accesos', label: 'Accesos', icon: QrCode, path: '/asistencias', role: 'staff' },
-            { id: 'st-socios', label: 'Socios', icon: Users, path: '/socios', role: 'staff' },
-            { id: 'st-lockers', label: 'Casilleros', icon: LockIcon, path: '/casilleros', role: 'staff' },
+            { id: 's-guia', label: 'Guía', icon: BookOpen, path: '/guia', role: 'socio' },
+            { id: 's-reportes', label: 'Reportes', icon: FileText, path: '/reportes', role: 'socio' },
+
+            // STAFF
+            { id: 'st-dash', label: 'Panel', icon: LayoutDashboard, path: '/staffdashboard', role: 'staff' },
+            { id: 'st-accesos', label: 'Accesos', icon: QrCode, path: '/staffscanner', role: 'staff' },
+            { id: 'st-socios', label: 'Socios', icon: Users, path: '/staffsocios', role: 'staff' },
+            { id: 'st-pagos', label: 'Cobros', icon: CreditCard, path: '/staffpagos', role: 'staff' },
+            { id: 'st-lockers', label: 'Casilleros', icon: LockIcon, path: '/stafflockers', role: 'staff' },
+
+            // ADMINISTRADOR
             { id: 'ad-dash', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', role: 'administrador' },
             { id: 'ad-reportes', label: 'Reportes', icon: FileText, path: '/reportes', role: 'administrador' },
             { id: 'ad-pagos', label: 'Finanzas', icon: CreditCard, path: '/pagos', role: 'administrador' },
             { id: 'ad-rrhh', label: 'RRHH', icon: Briefcase, path: '/empleados', role: 'administrador' },
             { id: 'ad-users', label: 'Usuarios', icon: Users, path: '/usuarios', role: 'administrador' },
         ];
+
         if (!isLoggedIn) return publicItems;
+        // Filtrar por el rol exacto que viene del backend
         return privateItems.filter(item => item.role === userRole);
     }, [isLoggedIn, userRole]);
 
@@ -117,18 +127,18 @@ const Header = ({
             <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
                 
                 <Link to="/" className="flex items-center gap-2">
-                    <img src={logoImg} alt="Logo Entrena+" className="h-25 w-25 object-contain hover:scale-105 transition-transform" />
+                    <img src={logoImg} alt="Logo Entrena+" className="h-12 object-contain hover:scale-105 transition-transform" />
                 </Link>
 
-                <nav className="hidden md:flex items-center gap-8">
+                <nav className="hidden md:flex items-center gap-6">
                     {menuItems.map((item) => {
-                        const active = location.pathname.startsWith(item.path) && (item.path !== '/' || location.pathname === '/');
+                        const active = location.pathname === item.path;
                         return (
                             <button
                                 key={item.id}
                                 onClick={() => handleNavigation(item.path)}
                                 className={`flex items-center gap-2 text-sm font-medium transition-colors duration-200 ${
-                                    active ? 'text-purple-600 font-bold' : 'text-neutral-300 hover:text-purple-500'
+                                    active ? 'text-purple-400 font-bold' : 'text-neutral-300 hover:text-purple-400'
                                 }`}
                             >
                                 <item.icon size={18} strokeWidth={active ? 2.5 : 2} />
@@ -141,21 +151,21 @@ const Header = ({
                 <div className="flex items-center gap-4">
                     {!isLoggedIn ? (
                         <>
-                            <button onClick={onLoginClick} className="hidden md:flex items-center font-medium text-sm text-neutral-300 hover:text-purple-600 transition-colors px-3">
+                            <button onClick={onLoginClick} className="hidden md:flex items-center font-medium text-sm text-neutral-300 hover:text-purple-400 transition-colors px-3">
                                 Iniciar Sesión
                             </button>
-                            <button onClick={onRegisterClick} className="px-5 py-2 bg-purple-500 text-white rounded-lg font-bold text-sm shadow-lg shadow-purple-600 hover:bg-purple-600 transition-all">
+                            <button onClick={onRegisterClick} className="px-5 py-2 bg-purple-600 text-white rounded-lg font-bold text-sm hover:bg-purple-700 transition-all">
                                 Registrarse
                             </button>
                         </>
                     ) : (
                         <div className="flex items-center gap-3">
                             
-                            {/* --- COMPONENTE NOTIFICACIONES --- */}
+                            {/* NOTIFICACIONES */}
                             <div className="relative">
                                 <button 
                                     onClick={() => { setShowNotifDropdown(!showNotifDropdown); setShowProfileDropdown(false); }}
-                                    className="relative p-2 rounded-full text-neutral-300 hover:bg-neutral-100 hover:text-purple-600 transition-all"
+                                    className="relative p-2 rounded-full text-neutral-300 hover:bg-neutral-700 hover:text-purple-400 transition-all"
                                 >
                                     <Bell size={20} />
                                     {unreadCount > 0 && (
@@ -176,28 +186,20 @@ const Header = ({
                                                 </button>
                                             )}
                                         </div>
-                                        <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                        <div className="max-h-[300px] overflow-y-auto">
                                             {notifications.length === 0 ? (
-                                                <div className="p-6 text-center text-neutral-400 text-sm">
-                                                    No tienes notificaciones
-                                                </div>
+                                                <div className="p-6 text-center text-neutral-400 text-sm">No tienes notificaciones</div>
                                             ) : (
                                                 notifications.map((notif) => (
                                                     <div 
                                                         key={notif.id} 
                                                         onClick={() => handleMarkRead(notif.id)} 
-                                                        className={`px-4 py-3 border-b border-neutral-50 hover:bg-neutral-50 transition-colors cursor-pointer flex gap-3 ${
-                                                            notif.leido === false ? 'bg-purple-50/40' : ''
-                                                        }`}
+                                                        className={`px-4 py-3 border-b border-neutral-50 hover:bg-neutral-50 transition-colors cursor-pointer flex gap-3 ${!notif.leido ? 'bg-purple-50/40' : ''}`}
                                                     >
-                                                        <div className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${notif.leido === false ? 'bg-purple-500' : 'bg-neutral-200'}`} />
+                                                        <div className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${!notif.leido ? 'bg-purple-500' : 'bg-neutral-200'}`} />
                                                         <div className="flex-1">
-                                                            <p className={`text-sm ${notif.leido === false ? 'font-bold text-neutral-900' : 'font-medium text-neutral-600'}`}>
-                                                                {notif.titulo}
-                                                            </p>
-                                                            <p className="text-xs text-neutral-500 mt-0.5 line-clamp-2">
-                                                                {notif.mensaje}
-                                                            </p>
+                                                            <p className={`text-sm ${!notif.leido ? 'font-bold text-neutral-900' : 'font-medium text-neutral-600'}`}>{notif.titulo}</p>
+                                                            <p className="text-xs text-neutral-500 mt-0.5 line-clamp-2">{notif.mensaje}</p>
                                                             <p className="text-[10px] text-neutral-400 mt-1 flex items-center gap-1">
                                                                 <Clock size={10} /> {formatTimeAgo(notif.fecha_creacion)}
                                                             </p>
@@ -210,37 +212,41 @@ const Header = ({
                                 )}
                             </div>
 
-                            {/* --- PERFIL --- */}
+                            {/* PERFIL */}
                             <div className="relative">
                                 <button 
                                     onClick={() => { setShowProfileDropdown(!showProfileDropdown); setShowNotifDropdown(false); }}
-                                    className="flex items-center gap-2 p-1 pr-3 bg-neutral-50 rounded-full border border-neutral-100 hover:border-purple-200 transition-all"
+                                    className="flex items-center gap-2 p-1 pr-3 bg-neutral-700 rounded-full border border-neutral-600 hover:border-purple-500 transition-all"
                                 >
                                     <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md uppercase">
-                                        {displayName ? displayName.charAt(0) : 'U'}
+                                        {displayName.charAt(0)}
                                     </div>
                                     <div className="hidden lg:block text-left">
-                                        <p className="text-[11px] font-bold text-neutral-900 leading-none mb-0.5">{displayName}</p>
-                                        <p className="text-[9px] text-purple-500 font-bold uppercase tracking-wider">{userRole}</p>
+                                        <p className="text-[11px] font-bold text-white leading-none mb-0.5">{displayName}</p>
+                                        <p className="text-[9px] text-purple-400 font-bold uppercase tracking-wider">{userRole}</p>
                                     </div>
-                                    <ChevronDown size={14} className={`text-neutral-400 transition-transform duration-300 ${showProfileDropdown ? 'rotate-180' : ''}`} />
+                                    <ChevronDown size={14} className={`text-neutral-400 transition-transform ${showProfileDropdown ? 'rotate-180' : ''}`} />
                                 </button>
+                                
                                 {showProfileDropdown && (
                                     <div className="absolute right-0 mt-3 w-48 bg-white rounded-2xl shadow-xl border border-neutral-100 py-2 z-[60] animate-fade-in-up origin-top-right">
                                         {userRole === 'socio' && (
-                                            <>
-                                                <button onClick={() => handleNavigation('/perfil')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-600 hover:bg-purple-50 hover:text-purple-600 transition-all font-semibold">
-                                                    <User size={16} /> Mi Cuenta
-                                                </button>
-                                                <div className="h-px bg-neutral-100 my-1 mx-4"></div>
-                                            </>
+                                            <button onClick={() => handleNavigation('/perfil')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-600 hover:bg-purple-50 hover:text-purple-600 transition-all font-semibold">
+                                                <User size={16} /> Mi Cuenta
+                                            </button>
                                         )}
-                                        <button onClick={() => { onLogout(); navigate('/'); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 font-bold transition-all">
+                                        <button 
+                                            onClick={() => { 
+                                                setShowProfileDropdown(false);
+                                                onLogout();
+                                                navigate('/');
+                                            }} 
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 font-bold transition-all"
+                                        >
                                             <LogOut size={16} /> Cerrar sesión
                                         </button>
                                     </div>
                                 )}
-                               
                             </div>
                         </div>
                     )}

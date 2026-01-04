@@ -24,24 +24,26 @@ const StaffScanner = () => {
     const procesarAsistencia = async (idUsuario) => {
         setStatus('processing');
         try {
-            // USAMOS TU NUEVA FUNCIÓN API
+            // La API debe realizar un INSERT en public.asistencias
+            // Campos: id_usuario, fecha_hora (default now), metodo: 'QR', estado: 'Acceso Permitido'
             const data = await registrarAsistenciaRequest(idUsuario);
 
-            // Si llega aquí es porque response.ok fue true (Acceso Permitido)
+            // Al recibir éxito, mostramos los datos reales del socio desde la tabla public.usuarios
             setStatus('success');
-            setScanResult(data.usuario);
-            setMessage(data.message);
-            addToast('Acceso permitido', 'success');
+            setScanResult({
+                nombre: data.usuario.nombre,
+                membresia_tipo: data.usuario.membresia_tipo // Mapeado a la columna 'membresia_tipo'
+            });
+            setMessage("Acceso Permitido");
+            addToast('Asistencia registrada correctamente', 'success');
             
         } catch (error) {
-            // Si entra aquí es porque la API lanzó error (403/404/500)
             setStatus('error');
-            setMessage(error.message || 'Error de lectura');
-            setScanResult(null); 
+            // El error puede venir de la validación de 'estado_suscripcion' o 'membresia_fin' en la DB
+            setMessage(error.message || 'Error al validar membresía');
             addToast(error.message, 'error');
         }
     };
-
     const resetScanner = () => {
         setScanResult(null);
         setStatus('idle');

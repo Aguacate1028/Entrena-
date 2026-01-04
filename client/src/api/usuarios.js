@@ -61,3 +61,35 @@ export const subirFotoPerfilRequest = async (idUsuario, archivo) => {
     if (!response.ok) throw new Error('Error al subir imagen');
     return await response.json();
 };
+
+
+export const obtenerStatsStaffRequest = async () => {
+    try {
+        const response = await fetch(`${API_URL}/usuarios/staff/stats`);
+        if (!response.ok) throw new Error('Error al cargar stats');
+        return await response.json();
+    } catch (error) {
+        console.error(error);
+        return { sociosActivos: 0, accesosHoy: 0, lockersOcupados: 0 };
+    }
+};
+
+export const obtenerTodosSociosRequest = async () => {
+    try {
+        const response = await fetch(`${API_URL}/usuarios/staff/socios`);
+        if (!response.ok) throw new Error('Error al cargar socios');
+        return await response.json();
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
+};
+
+export const obtenerLockersRequest = async () => {
+    try {
+        const response = await fetch(`${API_URL}/usuarios/staff/lockers`);
+        return await response.json();
+    } catch (error) {
+        return [];
+    }
+};

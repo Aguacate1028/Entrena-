@@ -176,6 +176,71 @@ router.post('/:id/foto', upload.single('archivo'), async (req, res) => {
     }
 });
 
+// 7. OBTENER ESTADÍSTICAS PARA EL DASHBOARD DEL STAFF
+router.get('/staff/stats', async (req, res) => {
+    try {
+        const hoy = new Date().toISOString().split('T')[0];
 
+        // A) Socios Activos (con membresía no vencida)
+        const { count: activos } = await supabase
+            .from('usuarios')
+            .select('*', { count: 'exact', head: true })
+            .eq('rol', 'socio')
+            .gte('membresia_fin', hoy);
+
+        // B) Accesos de hoy
+        const { count: accesosHoy } = await supabase
+            .from('asistencias')
+            .select('*', { count: 'exact', head: true })
+            .gte('fecha_hora', `${hoy}T00:00:00Z`)
+            .eq('estado', 'Acceso Permitido');
+
+        // C) Lockers ocupados
+        const { count: lockers } = await supabase
+            .from('usuarios')
+            .select('*', { count: 'exact', head: true })
+            .eq('locker_activo', true);
+
+        res.json({
+            sociosActivos: activos || 0,
+            accesosHoy: accesosHoy || 0,
+            lockersOcupados: lockers || 0
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 8. OBTENER TODOS LOS SOCIOS (Para StaffSocios.jsx)
+router.get('/staff/socios', async (req, res) => {
+    try {
+        const { data: socios, error } = await supabase
+            .from('usuarios')
+            .select('id_usuario, nombre, email, telefono, membresia_tipo, membresia_fin, estado_suscripcion, foto_perfil')
+            .eq('rol', 'socio')
+            .order('nombre', { ascending: true });
+
+        if (error) throw error;
+        res.json(socios);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 9. OBTENER ESTADO DE LOCKERS
+router.get('/staff/lockers', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('usuarios')
+            .select('nombre, locker_id, locker_activo, locker_fin')
+            .not('locker_id', 'is', null)
+            .order('locker_id', { ascending: true });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 export default router;

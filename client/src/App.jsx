@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route,Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import Header from './components/Header';
 import Home from './pages/Home';
@@ -17,10 +17,13 @@ import Progreso from './pages/Progreso';
 import Guia from './pages/Guia';
 import Comunidad from './pages/Comunidad';
 import Reportes from './pages/Reportes';
+import StaffDashboard from './components/StaffDashboard';
+
 
 const AppContent = () => {
   // 1. Aquí traemos la información real del usuario desde tu AuthContext
   const { user, isAuthenticated, logout, signup } = useContext(AuthContext);
+  const userRole = user?.rol;
   
   // 2. ESTADOS PARA LOS MODALES 
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -35,6 +38,7 @@ const AppContent = () => {
     <div className="flex flex-col min-h-screen">
       {/* 3. Pasamos las funciones AL HEADER para que los botones funcionen */}
       <Header 
+        key={user?.id_usuario || 'publico'}
         isLoggedIn={isAuthenticated}
         user={user}
         userName={user?.nombre || ''}
@@ -65,6 +69,16 @@ const AppContent = () => {
           <Route path="/guia" element={<Guia/>}/>
           <Route path="/comunidad" element={<Comunidad/>}/>
           <Route path="/reportes" element={<Reportes/>}/>
+          <Route 
+            path="/dashboard" 
+            element={
+              isAuthenticated && (userRole === 'staff' || userRole === 'administrador') 
+              ? <StaffDashboard /> 
+              : <Navigate to="/" />
+            } 
+          />
+
+
         </Routes>
       </main>
 

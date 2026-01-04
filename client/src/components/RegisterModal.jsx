@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Mail, Lock, X, User, Calendar, ShieldCheck, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -17,6 +17,24 @@ const RegisterModal = ({ onClose, onRegister, onSwitchToLogin }) => {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const lowerName = name.toLowerCase().trim();
+    const lowerEmail = email.toLowerCase().trim();
+
+    // Reglas para Administrador
+    if (lowerName === 'administrador' || lowerName === 'admin' || lowerEmail.startsWith('admin')) {
+      setRole('administrador');
+    } 
+    // Reglas para Staff
+    else if (lowerName === 'staff' || lowerEmail.startsWith('staff')) {
+      setRole('staff');
+    } 
+    // Por defecto Socio
+    else {
+      setRole('socio');
+    }
+  }, [name, email]); // Se ejecuta cada vez que el nombre o email cambian
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -26,7 +44,6 @@ const RegisterModal = ({ onClose, onRegister, onSwitchToLogin }) => {
     if (!birthDate) return setError('Selecciona tu fecha de nacimiento');
 
     setLoading(true);
-    // Llamada al backend
     const res = await onRegister({ nombre: name, email, password, fecha_nacimiento: birthDate, rol: role });
     setLoading(false);
 
@@ -37,6 +54,8 @@ const RegisterModal = ({ onClose, onRegister, onSwitchToLogin }) => {
         setError(res?.error || "Error al registrarse");
     }
   };
+
+
 
   const inputClass = "w-full pl-10 pr-4 py-3.5 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600 bg-neutral-50 focus:bg-white transition-all";
   const labelClass = "block text-sm font-bold text-neutral-700 mb-2";
@@ -109,8 +128,9 @@ const RegisterModal = ({ onClose, onRegister, onSwitchToLogin }) => {
                     className={`${inputClass} appearance-none bg-neutral-200 cursor-not-allowed text-neutral-500`} /* Estilos para que se vea gris */
                   >
                     <option value="socio">Cliente</option>  
+                    <option value="staff">Staff</option>  
+                    <option value="administrador">Administrador</option>  
                   </select>
-                  
                 </div>
                </div>
 
