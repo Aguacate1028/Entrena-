@@ -87,7 +87,8 @@ const Header = ({
             { id: 's-comunidad', label: 'Comunidad', icon: Users, path: '/comunidad', role: 'socio' },
             { id: 's-progreso', label: 'Progreso', icon: TrendingUp, path: '/progreso', role: 'socio' },
             { id: 's-manual', label: 'Guía', icon: BookOpen, path: '/guia', role: 'socio' },
-            { id: 's-planes', label: 'Mi plan', icon: CreditCard, path: '/membresias', role: 'socio' },
+            { id: 's-planes', label: 'Membresías', icon: CreditCard, path: '/membresias', role: 'socio' },
+            { id: 's-planes', label: 'Reportes', icon: FileText, path: '/reportes', role: 'socio' },
             { id: 'st-dash', label: 'Panel', icon: LayoutDashboard, path: '/dashboard', role: 'staff' },
             { id: 'st-pagos', label: 'Cobros', icon: CreditCard, path: '/pagos', role: 'staff' },
             { id: 'st-accesos', label: 'Accesos', icon: QrCode, path: '/asistencias', role: 'staff' },
@@ -140,10 +141,10 @@ const Header = ({
                 <div className="flex items-center gap-4">
                     {!isLoggedIn ? (
                         <>
-                            <button onClick={onLoginClick} className="hidden md:flex items-center font-medium text-sm text-neutral-600 hover:text-purple-600 transition-colors px-3">
+                            <button onClick={onLoginClick} className="hidden md:flex items-center font-medium text-sm text-neutral-300 hover:text-purple-600 transition-colors px-3">
                                 Iniciar Sesión
                             </button>
-                            <button onClick={onRegisterClick} className="px-5 py-2 bg-purple-500 text-white rounded-lg font-bold text-sm shadow-lg shadow-purple-200 hover:bg-purple-600 transition-all">
+                            <button onClick={onRegisterClick} className="px-5 py-2 bg-purple-500 text-white rounded-lg font-bold text-sm shadow-lg shadow-purple-600 hover:bg-purple-600 transition-all">
                                 Registrarse
                             </button>
                         </>

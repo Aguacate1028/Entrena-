@@ -3,11 +3,11 @@ import { supabase } from '../supabase.js';
 
 const router = Router();
 
+// 1. CONTRATAR
 router.post('/contratar', async (req, res) => {
     const { id_usuario, plan } = req.body;
 
     try {
-        // 1. Obtener lista de entrenadores
         const { data: entrenadores, error: errorBusqueda } = await supabase
             .from('entrenadores')
             .select('*');
@@ -18,12 +18,9 @@ router.post('/contratar', async (req, res) => {
             return res.status(404).json({ error: "No hay entrenadores en la base de datos." });
         }
 
-        // 2. Elegir uno al azar
         const random = Math.floor(Math.random() * entrenadores.length);
         const entrenadorSeleccionado = entrenadores[random];
 
-        // 3. Guardar la relación en el usuario (guardamos el ID y los datos actuales)
-        // NOTA: Guardamos 'entrenador_data' como respaldo JSON para acceso rápido
         const { error: errorUpdate } = await supabase.from('usuarios').update({
             entrenador_activo: true,
             entrenador_plan: plan,
@@ -33,16 +30,31 @@ router.post('/contratar', async (req, res) => {
 
         if (errorUpdate) throw errorUpdate;
 
-        console.log("Entrenador asignado:", entrenadorSeleccionado.nombre);
-
-        // 4. ENVIAR DATOS AL FRONTEND (Esta es la parte clave)
-        res.json({ 
-            success: true, 
-            entrenador: entrenadorSeleccionado // <--- El modal necesita ESTE objeto
-        });
+        res.json({ success: true, entrenador: entrenadorSeleccionado });
 
     } catch (error) {
         console.error("Error backend:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 2. CANCELAR (ESTO ES LO QUE TE FALTABA)
+router.post('/cancelar', async (req, res) => {
+    const { id_usuario } = req.body;
+
+    try {
+        // Borramos los datos del entrenador en el usuario
+        const { error } = await supabase.from('usuarios').update({
+            entrenador_activo: false,
+            entrenador_plan: null,
+            id_entrenador: null,
+            entrenador_data: null
+        }).eq('id_usuario', id_usuario);
+
+        if (error) throw error;
+
+        res.json({ success: true, message: "Servicio cancelado" });
+    } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });

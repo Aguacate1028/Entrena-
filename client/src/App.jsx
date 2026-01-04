@@ -15,6 +15,8 @@ import { ToastProvider } from './context/ToastContext';
 import Perfil from './pages/Perfil';
 import Progreso from './pages/Progreso';
 import Guia from './pages/Guia';
+import Comunidad from './pages/Comunidad';
+import Reportes from './pages/Reportes';
 
 const AppContent = () => {
   // 1. Aquí traemos la información real del usuario desde tu AuthContext
@@ -61,9 +63,8 @@ const AppContent = () => {
           <Route path="/perfil" element={<Perfil/>} />
           <Route path="/progreso" element={<Progreso/>}/>
           <Route path="/guia" element={<Guia/>}/>
-
-          
-
+          <Route path="/comunidad" element={<Comunidad/>}/>
+          <Route path="/reportes" element={<Reportes/>}/>
         </Routes>
       </main>
 

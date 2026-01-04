@@ -18,7 +18,7 @@ const Home = ({ user }) => {
                         {/* Saludo convertido en Título Principal */}
                         <h1 className="text-4xl font-black text-neutral-900 tracking-tight">Bienvenid@, <span className="text-purple-600  px-2 rounded-lg">{user.nombre}</span>👋</h1>
                         <p className="text-neutral-900 text-lg">
-                            ¿List@ para romper tus récords hoy?
+                            Recuerda mantener tu información actualizada en "Mi Cuenta"
                         </p>
                     </div>
                 </div>

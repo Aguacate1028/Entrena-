@@ -3,9 +3,11 @@ import { supabase } from '../supabase.js';
 
 const router = Router();
 
+// --- RUTAS GET (Para obtener los precios) ---
+
+// Opción 1: Ruta raíz (http://localhost:5000/api/membresias)
 router.get('/', async (req, res) => {
     try {
-        // Ordenamos por precio para que aparezcan en orden lógico (barato -> caro)
         const { data, error } = await supabase
             .from('membresias')
             .select('*')
@@ -14,25 +16,37 @@ router.get('/', async (req, res) => {
         if (error) throw error;
         res.json(data);
     } catch (err) {
-        console.error("Error membresias:", err.message);
-        res.status(500).json({ error: "Error al cargar membresías" });
+        console.error("Error cargando membresias:", err.message);
+        res.status(500).json({ error: "Error al cargar planes" });
     }
 });
-// GET: Obtener planes (Para mostrarlos en el frontend)
+
+// Opción 2: Ruta específica (http://localhost:5000/api/membresias/planes)
+// IMPORTANTE: Tu frontend parece estar usando esta ruta, por eso te daba error 404 al quitarla.
 router.get('/planes', async (req, res) => {
-    const { data, error } = await supabase.from('membresias').select('*').order('precio', { ascending: true });
-    if (error) return res.status(500).json({ error: error.message });
-    res.json(data);
+    try {
+        const { data, error } = await supabase
+            .from('membresias')
+            .select('*')
+            .order('precio', { ascending: true });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// POST: Procesar Pago
+// --- RUTAS POST (Pagos y Gestión) ---
+
+// Procesar Pago
 router.post('/procesar', async (req, res) => {
     const { id_usuario, id_plan } = req.body;
     
     console.log(`[PAGO] Iniciando proceso para Usuario: ${id_usuario}, Plan ID: ${id_plan}`);
 
     try {
-        // 1. Obtener detalles del plan seleccionado
+        // 1. Verificar plan
         const { data: plan, error: errorPlan } = await supabase
             .from('membresias')
             .select('nombre')
@@ -40,34 +54,26 @@ router.post('/procesar', async (req, res) => {
             .single();
 
         if (errorPlan || !plan) {
-            console.error("[PAGO ERROR] No se encontró el plan:", errorPlan);
             return res.status(404).json({ error: "El plan seleccionado no existe." });
         }
 
-        console.log(`[PAGO] Plan encontrado: ${plan.nombre}`);
-
-        // 2. Calcular fecha de fin (1 mes después)
+        // 2. Calcular fecha fin
         const fechaFin = new Date();
         fechaFin.setMonth(fechaFin.getMonth() + 1);
         const fechaFinString = fechaFin.toISOString().split('T')[0];
 
         // 3. Actualizar usuario
-        const { data: updateData, error: updateError } = await supabase
+        const { error: updateError } = await supabase
             .from('usuarios')
             .update({
                 membresia_tipo: plan.nombre,
                 membresia_fin: fechaFinString,
                 estado_suscripcion: 'activa'
             })
-            .eq('id_usuario', id_usuario)
-            .select();
+            .eq('id_usuario', id_usuario);
 
-        if (updateError) {
-            console.error("[PAGO ERROR] Falló la actualización de usuario:", updateError);
-            throw updateError;
-        }
+        if (updateError) throw updateError;
 
-        console.log("[PAGO] Usuario actualizado exitosamente:", updateData);
         res.json({ message: "Pago exitoso", success: true });
 
     } catch (error) {
@@ -76,19 +82,24 @@ router.post('/procesar', async (req, res) => {
     }
 });
 
-// POST: Gestionar (Cancelar/Pausar)
+// Gestionar (Cancelar/Pausar)
 router.post('/gestionar', async (req, res) => {
     const { id_usuario, accion } = req.body;
     try {
         const estado = accion === 'cancelar' ? 'cancelada' : 'pausada';
         
-        // Si cancela, quitamos el tipo de membresía, si pausa, lo mantenemos pero cambiamos estado
         const updates = { estado_suscripcion: estado };
+        
+        // Si cancela, lo pasamos a "Sin Membresía"
         if (accion === 'cancelar') {
-             updates.membresia_tipo = 'Gratis';
+             updates.membresia_tipo = 'Sin Membresía'; 
+             updates.membresia_fin = null;
         }
 
-        const { error } = await supabase.from('usuarios').update(updates).eq('id_usuario', id_usuario);
+        const { error } = await supabase
+            .from('usuarios')
+            .update(updates)
+            .eq('id_usuario', id_usuario);
         
         if (error) throw error;
         res.json({ message: `Suscripción ${estado}` });
@@ -96,6 +107,5 @@ router.post('/gestionar', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-
 
 export default router;

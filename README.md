@@ -15,3 +15,4 @@ npm install react-qr-code react-qr-reader --legacy-peer-deps
 Instalar lo siguiente en la carpeta server
 npm install multer
 npm install @stripe/stripe-js
+npm install node-cron nodemailer

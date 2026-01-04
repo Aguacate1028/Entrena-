@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { Check, Star, Crown, CreditCard, AlertTriangle, XCircle, PauseCircle } from 'lucide-react';
+import { Check, Crown, CreditCard, AlertTriangle, XCircle, PauseCircle, Lock, Key } from 'lucide-react'; // <--- Agregué iconos Lock y Key
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import LoginModal from '../components/LoginModal'; 
-import ConfirmModal from '../components/ConfirmModal'; // <--- TU MODAL IMPORTADO
+import ConfirmModal from '../components/ConfirmModal'; 
+import LockerModal from '../components/LockerModal'; 
 
 // API
 import { obtenerPerfilRequest } from '../api/usuarios'; 
+import { cancelarLockerRequest } from '../api/lockers'; 
 import { 
     obtenerMembresiasRequest, 
     procesarPagoRequest, 
@@ -18,18 +20,17 @@ const Membresias = () => {
     const { user, isAuthenticated } = useContext(AuthContext);
     const { addToast } = useToast();
 
-    // 2. ESTADOS (¡Esto te faltaba!)
+    // 2. ESTADOS
     const [planes, setPlanes] = useState([]);
     const [loading, setLoading] = useState(true);
-    
-    // Datos frescos del usuario (para que se actualice al instante)
     const [datosUsuario, setDatosUsuario] = useState(null);
 
     // Estados de Modales
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [showLockerModal, setShowLockerModal] = useState(false); 
     
-    // Estado para tu ConfirmModal
+    // Estado para ConfirmModal
     const [confirmData, setConfirmData] = useState({ isOpen: false, action: null, title: '', message: '' });
 
     // Estado de selección
@@ -54,7 +55,7 @@ const Membresias = () => {
         if (!user) return;
         const id = user.id_usuario || user.id;
         const data = await obtenerPerfilRequest(id);
-        setDatosUsuario(data); // Actualizamos estado local
+        setDatosUsuario(data); 
     };
 
     // 4. MANEJADORES
@@ -65,7 +66,6 @@ const Membresias = () => {
             return;
         }
         
-        // Si ya tiene este plan activo
         if (datosUsuario?.membresia_tipo === plan.nombre && datosUsuario?.estado_suscripcion === 'activa') {
             addToast('Ya disfrutas de este plan', 'info');
             return;
@@ -87,7 +87,7 @@ const Membresias = () => {
 
             addToast(`¡Bienvenido al plan ${selectedPlan.nombre}!`, 'success');
             setShowPaymentModal(false);
-            await recargarUsuario(); // Actualizar UI sin recargar página
+            await recargarUsuario();
         } catch (error) {
             addToast(error.message || 'Error al procesar pago', 'error');
         } finally {
@@ -95,11 +95,18 @@ const Membresias = () => {
         }
     };
 
-    // Preparar el modal de confirmación
+    // Preparar el modal de confirmación 
     const solicitarGestion = (accion) => {
-        const config = accion === 'cancelar' 
-            ? { title: '¿Cancelar suscripción?', msg: 'Perderás tus beneficios Premium al final del periodo.' }
-            : { title: '¿Pausar suscripción?', msg: 'Tu cuenta se congelará temporalmente. No se te cobrará.' };
+        let config = {};
+
+        // Configuración según la acción
+        if (accion === 'cancelar') {
+            config = { title: '¿Cancelar suscripción?', msg: 'Perderás tus beneficios Premium al final del periodo.' };
+        } else if (accion === 'pausar') {
+            config = { title: '¿Pausar suscripción?', msg: 'Tu cuenta se congelará temporalmente. No se te cobrará.' };
+        } else if (accion === 'cancelar_locker') { 
+            config = { title: '¿Liberar Locker?', msg: 'Dejarás de tener acceso a tu casillero asignado inmediatamente.' };
+        }
 
         setConfirmData({
             isOpen: true,
@@ -114,14 +121,23 @@ const Membresias = () => {
         if (!confirmData.action) return;
         setProcessing(true);
         try {
-            await gestionarSuscripcionRequest({ 
-                id_usuario: datosUsuario.id_usuario, 
-                accion: confirmData.action 
-            });
+            // A) GESTIÓN DE LOCKER
+            if (confirmData.action === 'cancelar_locker') {
+                await cancelarLockerRequest(datosUsuario.id_usuario);
+                addToast('Locker liberado correctamente', 'success');
+            } 
+            // B) GESTIÓN DE MEMBRESÍA
+            else {
+                await gestionarSuscripcionRequest({ 
+                    id_usuario: datosUsuario.id_usuario, 
+                    accion: confirmData.action 
+                });
+                addToast(`Suscripción ${confirmData.action === 'cancelar' ? 'cancelada' : 'pausada'} correctamente`, 'success');
+            }
             
-            addToast(`Suscripción ${confirmData.action === 'cancelar' ? 'cancelada' : 'pausada'} correctamente`, 'success');
             await recargarUsuario();
-            setConfirmData({ ...confirmData, isOpen: false }); // Cerrar modal
+            setConfirmData({ ...confirmData, isOpen: false }); 
+
         } catch (error) {
             addToast(error.message || 'Error al gestionar', 'error');
         } finally {
@@ -139,11 +155,13 @@ const Membresias = () => {
                     <p className="text-neutral-500 mt-4 max-w-xl mx-auto">Sin contratos forzosos. Cancela cuando quieras.</p>
                 </div>
 
-                {/* --- PANEL DE GESTIÓN (Visible si tiene plan) --- */}
-                {datosUsuario?.membresia_tipo && 
-                 datosUsuario.membresia_tipo !== 'Gratis' && 
-                 datosUsuario.estado_suscripcion !== 'cancelada' && (
-                    <div className="mb-16 bg-purple-50 border border-purple-100 p-8 rounded-[32px] flex flex-col md:flex-row items-center justify-between gap-6 animate-fade-in shadow-sm">
+                {/* ==============================================
+                    PANEL DE MEMBRESÍA ACTUAL
+                   ============================================== */}
+                    {datosUsuario?.membresia_tipo && 
+                    datosUsuario.membresia_tipo !== 'Sin Membresía' && 
+                    datosUsuario.estado_suscripcion !== 'cancelada' && (
+                    <div className="mb-8 bg-purple-50 border border-purple-100 p-8 rounded-[32px] flex flex-col md:flex-row items-center justify-between gap-6 animate-fade-in shadow-sm">
                         <div>
                             <h4 className="text-xl font-bold text-purple-900 flex items-center gap-2">
                                 <Crown size={20} className="text-purple-600"/> Tu Plan Actual: {datosUsuario.membresia_tipo}
@@ -166,6 +184,62 @@ const Membresias = () => {
                     </div>
                 )}
 
+                {/* ==============================================
+                    PANEL DE LOCKER 
+                   ============================================== */}
+                {datosUsuario && (
+                    datosUsuario.locker_activo ? (
+                        // A) TIENE LOCKER: MOSTRAR DETALLES Y BOTÓN CANCELAR
+                        <div className="mb-16 bg-neutral-900 text-white p-8 rounded-[32px] flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-neutral-900/20 animate-fade-in relative overflow-hidden">
+                            <div className="relative z-10 flex items-center gap-4">
+                                <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center">
+                                    <Key size={28} className="text-yellow-400"/>
+                                </div>
+                                <div>
+                                    <h4 className="text-xl font-bold text-white flex items-center gap-2">
+                                        Locker #{datosUsuario.locker_id}
+                                    </h4>
+                                    <p className="text-neutral-400 text-sm mt-1">
+                                        Vence el: <span className="text-white font-bold">{new Date(datosUsuario.locker_fin).toLocaleDateString()}</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="relative z-10">
+                                <button 
+                                    onClick={() => solicitarGestion('cancelar_locker')} 
+                                    className="px-6 py-3 bg-red-500/10 border border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white rounded-xl font-bold text-sm transition-all flex items-center gap-2"
+                                >
+                                    <XCircle size={18}/> Liberar Locker
+                                </button>
+                            </div>
+                            {/* Decoración fondo */}
+                            <Lock className="absolute -right-6 -bottom-6 text-white/5 rotate-12" size={150} />
+                        </div>
+                    ) : (
+                        // B) NO TIENE LOCKER: MOSTRAR BANNER DE RENTA
+                        <div className="mb-16 bg-gradient-to-br from-neutral-500 to-purple-300 p-6 border-2 border-neutral-200 p-6 rounded-[32px] flex flex-col md:flex-row items-center justify-between gap-4 hover:border-purple-300 transition-colors group">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                                    <Lock size={26} className="text-gray-400 group-hover:text-purple-600"/>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-neutral-900">¿Necesitas guardar tus cosas?</h4>
+                                    <p className="text-sm text-neutral-700">Renta un locker personal desde $150/mes.</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    if (!isAuthenticated) setShowLoginModal(true);
+                                    else setShowLockerModal(true);
+                                }} 
+                                className="px-6 py-3 bg-neutral-900 text-white rounded-xl font-bold text-sm hover:bg-purple-600 transition-all shadow-lg"
+                            >
+                                Rentar Locker
+                            </button>
+                        </div>
+                    )
+                )}
+
                 {/* --- GRID DE PLANES --- */}
                 {loading ? (
                     <div className="grid md:grid-cols-3 gap-8 items-start">
@@ -174,7 +248,6 @@ const Membresias = () => {
                 ) : (
                     <div className="grid md:grid-cols-3 gap-8 items-center">
                         {planes.map((plan) => {
-                            // Detectar si es el plan actual
                             const esPlanActual = datosUsuario?.membresia_tipo === plan.nombre && datosUsuario?.estado_suscripcion !== 'cancelada';
 
                             return (
@@ -215,9 +288,10 @@ const Membresias = () => {
                     </div>
                 )}
             </div>
+            
             {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
 
-            {/* Modal de Pago */}
+            {/* Modal de Pago Membresía */}
             {showPaymentModal && selectedPlan && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
                     <div className="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative animate-scale-up">
@@ -230,7 +304,15 @@ const Membresias = () => {
                 </div>
             )}
 
-            {/* Modal de Confirmación (Gestión) */}
+            {/* MODAL DE RENTA DE LOCKER (NUEVO) */}
+            {showLockerModal && (
+                <LockerModal 
+                    onClose={() => setShowLockerModal(false)} 
+                    onSuccess={recargarUsuario} // Para actualizar la UI tras pagar
+                />
+            )}
+
+            {/* Modal de Confirmación (Gestión Membresía + Locker) */}
             <ConfirmModal 
                 isOpen={confirmData.isOpen}
                 onClose={() => setConfirmData({ ...confirmData, isOpen: false })}

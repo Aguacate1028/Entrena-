@@ -5,14 +5,14 @@ import multer from 'multer';
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// 1. OBTENER PERFIL + ESTADÍSTICAS REALES
+// 1. OBTENER PERFIL COMPLETO + ENTRENADORES + ESTADÍSTICAS
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        // A) Datos del Usuario
+        // A) Datos del Usuario CON ENTRENADORES
         const { data: usuario, error } = await supabase
             .from('usuarios')
-            .select('*')
+            .select('*, entrenadores(*)') 
             .eq('id_usuario', id)
             .single();
 
@@ -24,34 +24,32 @@ router.get('/:id', async (req, res) => {
             .select('*')
             .eq('id_usuario', id);
 
-        // C) ESTADÍSTICAS REALES (Basadas en Asistencias)
-        // 1. Total Entrenamientos (Conteo de asistencias)
+        // C) ESTADÍSTICAS
         const { count: totalEntrenamientos } = await supabase
             .from('asistencias')
             .select('*', { count: 'exact', head: true })
             .eq('id_usuario', id);
 
-        // 2. Días Activos (Calculamos días únicos)
         const { data: fechasAsistencia } = await supabase
             .from('asistencias')
             .select('fecha_hora')
             .eq('id_usuario', id);
         
-        // Usamos un Set para contar días únicos (YYYY-MM-DD)
         const diasUnicos = new Set(fechasAsistencia.map(a => a.fecha_hora.split('T')[0]));
-        
-        // 3. Calorías (Estimado: 350 cal por visita promedio)
-        const caloriasQuemadas = totalEntrenamientos * 350;
+        const caloriasQuemadas = (totalEntrenamientos || 0) * 350;
 
         const stats = {
             entrenamientos: totalEntrenamientos || 0,
             dias_activos: diasUnicos.size || 0,
-            duracion_media: 60, // Dato estático por ahora (promedio de clases)
+            duracion_media: 60,
             calorias: caloriasQuemadas
         };
 
+        // Devolvemos todo junto
         res.json({ ...usuario, stats, objetivos: objetivos || [] });
+
     } catch (err) {
+        console.error("Error obteniendo perfil:", err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -178,19 +176,6 @@ router.post('/:id/foto', upload.single('archivo'), async (req, res) => {
     }
 });
 
-router.get('/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        const { data, error } = await supabase
-            .from('usuarios')
-            .select('*, entrenadores(*)') 
-            .eq('id_usuario', id)
-            .single();
 
-        if (error) throw error;
-        res.json(data);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
+
 export default router;

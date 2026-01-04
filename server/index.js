@@ -13,7 +13,10 @@ import asistenciasRoutes from './routes/asistencias.routes.js';
 import progresoRoutes from './routes/progreso.routes.js';
 import guiaRoutes from './routes/guia.routes.js';
 import entrenadoresRoutes from './routes/entrenadores.routes.js';
-
+import lockersRoutes from './routes/lockers.routes.js';
+import { iniciarScheduler } from './services/scheduler.js';
+import comunidadRoutes from './routes/comunidad.routes.js';
+import reportesRoutes from './routes/reportes.routes.js';
 
 
 
@@ -39,8 +42,13 @@ app.use('/api/asistencias',asistenciasRoutes);
 app.use('/api/progreso', progresoRoutes);
 app.use('/api/guia', guiaRoutes); 
 app.use('/api/entrenadores', entrenadoresRoutes);
+app.use('/api/lockers', lockersRoutes);
+app.use('/api/comunidad', comunidadRoutes);
+app.use('/api/reportes', reportesRoutes);
 
 
+
+iniciarScheduler();
 const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`Servidor escuchando en el puerto ${PORT}`);
