@@ -7,6 +7,15 @@ import adminRoutes from './routes/admin.routes.js';
 import landingRoutes from './routes/landing.routes.js';
 import clasesRoutes from './routes/clases.routes.js'; 
 import membresiasRoutes from './routes/membresias.routes.js';
+import notificacionesRoutes from './routes/notificaciones.routes.js';
+import usuariosRoutes from './routes/usuarios.routes.js';
+import asistenciasRoutes from './routes/asistencias.routes.js';
+import progresoRoutes from './routes/progreso.routes.js';
+import guiaRoutes from './routes/guia.routes.js';
+import entrenadoresRoutes from './routes/entrenadores.routes.js';
+
+
+
 
 const app = express();
 
@@ -24,6 +33,13 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/public', landingRoutes);
 app.use('/api/clases', clasesRoutes); 
 app.use('/api/membresias', membresiasRoutes);
+app.use('/api/notificaciones', notificacionesRoutes);
+app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/asistencias',asistenciasRoutes);
+app.use('/api/progreso', progresoRoutes);
+app.use('/api/guia', guiaRoutes); 
+app.use('/api/entrenadores', entrenadoresRoutes);
+
 
 const PORT = 5000;
 app.listen(PORT, () => {

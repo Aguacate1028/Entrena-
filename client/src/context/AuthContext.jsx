@@ -6,9 +6,8 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [errors, setErrors] = useState([]);
 
-    // Verificar si ya hay una sesión guardada al recargar la página
+    // Al cargar la página, revisamos si ya había una sesión guardada
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
@@ -17,50 +16,37 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
-    // Función de Registro
-    const signup = async (userData) => {
-        const res = await registerRequest(userData);
+    // Función LOGIN
+    const login = async (email, password) => {
+        const res = await loginRequest({ email, password });
         if (res.success) {
             setUser(res.user);
             setIsAuthenticated(true);
-            localStorage.setItem('user', JSON.stringify(res.user)); // Guardar sesión
-        } else {
-            setErrors([res.error]);
+            localStorage.setItem('user', JSON.stringify(res.user));
         }
-        return res; // Retornamos respuesta para manejar redirección en el componente
+        return res; // Retornamos la respuesta para mostrar errores en el modal si falla
     };
 
-    // Función de Login
-    const signin = async (userCredentials) => {
-        const res = await loginRequest(userCredentials);
+    // Función SIGNUP (Registro)
+    const signup = async (datosUsuario) => {
+        const res = await registerRequest(datosUsuario);
         if (res.success) {
             setUser(res.user);
             setIsAuthenticated(true);
-            localStorage.setItem('user', JSON.stringify(res.user)); // Guardar sesión
-            setErrors([]);
-        } else {
-            setErrors([res.error]);
+            localStorage.setItem('user', JSON.stringify(res.user));
         }
         return res;
     };
 
-    // Función de Logout
+    // Función LOGOUT
     const logout = () => {
         setUser(null);
         setIsAuthenticated(false);
-        setErrors([]);
-        localStorage.removeItem('user'); // Borrar sesión
+        localStorage.removeItem('user');
     };
 
     return (
-        <AuthContext.Provider value={{
-            user,
-            isAuthenticated,
-            errors,
-            signup,
-            signin,
-            logout
-        }}>
+        <AuthContext.Provider value={{ user, isAuthenticated, login, signup, logout }}>
             {children}
         </AuthContext.Provider>
     );

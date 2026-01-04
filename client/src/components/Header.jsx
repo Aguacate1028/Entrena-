@@ -1,169 +1,246 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
-  Dumbbell, LogIn, User, Home, Users, LayoutDashboard, 
-  TrendingUp, BookOpen, ChevronDown, LogOut,
-  Calendar, CreditCard, Briefcase, FileText, QrCode,
-  LockIcon
+  Home, Dumbbell, CreditCard, Info, Users, TrendingUp, BookOpen, 
+  LayoutDashboard, QrCode, LockIcon, FileText, Briefcase,
+  LogOut, User, ChevronDown, Bell, Check, Clock,BadgeInfo
 } from 'lucide-react';
 import logoImg from '../img/logo.png'; 
+import { 
+    obtenerNotificacionesRequest, 
+    marcarLeidaRequest, 
+    marcarTodasLeidasRequest 
+} from '../api/notificaciones';
+
+// Función utilidad para el tiempo
+const formatTimeAgo = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+    if (seconds < 60) return 'Hace un momento';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `Hace ${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `Hace ${hours} h`;
+    return `Hace ${Math.floor(hours / 24)} días`;
+};
 
 const Header = ({ 
     isLoggedIn, 
-    userName, 
-    userRole, // 'socio' | 'staff' | 'administrador'
-    onLogout,
-    onLoginClick,    // Prop para abrir modal Login
-    onRegisterClick  // Prop para abrir modal Registro
+    user,         
+    userName,    
+    userRole, 
+    onLogout, 
+    onLoginClick, 
+    onRegisterClick 
 }) => {
-    const [showProfileDropdown, setShowProfileDropdown] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+    
+    // Obtener ID de forma segura (Prioriza user.id_usuario, luego user.id)
+    const currentUserId = user?.id_usuario || user?.id;
 
-    // --- 1. MENÚS PRIVADOS (SOLO LOGUEADOS) ---
-    const roleMenuItems = useMemo(() => [
-        // ROL: SOCIO
-        { id: 'classes', label: 'Clases', icon: Calendar, path: '/socio/clases', role: 'socio' },
-        { id: 'social', label: 'Comunidad', icon: Users, path: '/socio/comunidad', role: 'socio' },
-        { id: 'progress', label: 'Progreso', icon: TrendingUp, path: '/socio/progreso', role: 'socio' },
-        { id: 'guide', label: 'Guía', icon: BookOpen, path: '/socio/manual', role: 'socio' },
+    const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+    const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+    const [notifications, setNotifications] = useState([]); 
 
-        // ROL: STAFF
-        { id: 'staff-dash', label: 'Panel', icon: LayoutDashboard, path: '/staff/dashboard', role: 'staff' },
-        { id: 'staff-pagos', label: 'Cobros', icon: CreditCard, path: '/staff/pagos', role: 'staff' },
-        { id: 'staff-asistencias', label: 'Accesos', icon: QrCode, path: '/staff/asistencias', role: 'staff' },
-        { id: 'staff-gestion', label: 'Socios', icon: Users, path: '/staff/socios', role: 'staff' },
-        { id: 'staff-casilleros', label: 'Casilleros', icon: LockIcon, path: '/staff/casilleros', role: 'staff' },
+    // --- CARGAR DATOS ---
+    const loadNotificaciones = async () => {
+        if (!currentUserId) return; // Si no hay ID (porque user es null), no carga notificaciones
+        const data = await obtenerNotificacionesRequest(currentUserId);
+        setNotifications(data);
+    };
 
-        // ROL: ADMINISTRADOR
-        { id: 'admin-dash', label: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard', role: 'administrador' },
-        { id: 'admin-reportes', label: 'Reportes', icon: FileText, path: '/admin/reportes', role: 'administrador' },
-        { id: 'admin-pagos', label: 'Finanzas', icon: CreditCard, path: '/admin/pagos', role: 'administrador' },
-        { id: 'admin-empleados', label: 'RRHH', icon: Briefcase, path: '/admin/empleados', role: 'administrador' },
-        { id: 'admin-gestion', label: 'Usuarios', icon: Users, path: '/admin/usuarios', role: 'administrador' },
-    ], []);
+    useEffect(() => {
+        if (isLoggedIn && currentUserId) {
+            loadNotificaciones();
+            const interval = setInterval(loadNotificaciones, 60000); 
+            return () => clearInterval(interval);
+        }
+    }, [isLoggedIn, currentUserId]);
 
-    // --- 2. FILTRADO ---
-    const visibleItems = useMemo(() => {
-        if (!isLoggedIn) return []; 
-        return roleMenuItems.filter(item => item.role === userRole);
-    }, [isLoggedIn, userRole, roleMenuItems]);
+    // --- ACCIONES NOTIFICACIONES ---
+    const unreadCount = notifications.filter(n => n.leido === false).length; // Supabase devuelve booleano true/false
 
-    // Índice activo para la barra morada
-    const activeIndex = visibleItems.findIndex(item => location.pathname.startsWith(item.path));
+    const handleMarkRead = async (id) => {
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, leido: true } : n));
+        await marcarLeidaRequest(id);
+    };
+
+    const handleMarkAllRead = async () => {
+        setNotifications(prev => prev.map(n => ({ ...n, leido: true })));
+        await marcarTodasLeidasRequest(currentUserId);
+    };
+
+    // --- MENÚS ---
+    const menuItems = useMemo(() => {
+        const publicItems = [
+            { id: 'home', label: 'Inicio', icon: Home, path: '/' },
+            { id: 'clases', label: 'Clases', icon: Dumbbell, path: '/clases' },
+            { id: 'planes', label: 'Planes', icon: CreditCard, path: '/membresias' },
+            { id: 'nosotros', label: 'Nosotros', icon: Info, path: '/informacion' },
+        ];
+        const privateItems = [
+            { id: 'home', label: 'Anuncios', icon: BadgeInfo, path: '/', role: 'socio' },
+            { id: 's-clases', label: 'Clases', icon: Dumbbell, path: '/clases', role: 'socio' },
+            { id: 's-comunidad', label: 'Comunidad', icon: Users, path: '/comunidad', role: 'socio' },
+            { id: 's-progreso', label: 'Progreso', icon: TrendingUp, path: '/progreso', role: 'socio' },
+            { id: 's-manual', label: 'Guía', icon: BookOpen, path: '/guia', role: 'socio' },
+            { id: 's-planes', label: 'Mi plan', icon: CreditCard, path: '/membresias', role: 'socio' },
+            { id: 'st-dash', label: 'Panel', icon: LayoutDashboard, path: '/dashboard', role: 'staff' },
+            { id: 'st-pagos', label: 'Cobros', icon: CreditCard, path: '/pagos', role: 'staff' },
+            { id: 'st-accesos', label: 'Accesos', icon: QrCode, path: '/asistencias', role: 'staff' },
+            { id: 'st-socios', label: 'Socios', icon: Users, path: '/socios', role: 'staff' },
+            { id: 'st-lockers', label: 'Casilleros', icon: LockIcon, path: '/casilleros', role: 'staff' },
+            { id: 'ad-dash', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', role: 'administrador' },
+            { id: 'ad-reportes', label: 'Reportes', icon: FileText, path: '/reportes', role: 'administrador' },
+            { id: 'ad-pagos', label: 'Finanzas', icon: CreditCard, path: '/pagos', role: 'administrador' },
+            { id: 'ad-rrhh', label: 'RRHH', icon: Briefcase, path: '/empleados', role: 'administrador' },
+            { id: 'ad-users', label: 'Usuarios', icon: Users, path: '/usuarios', role: 'administrador' },
+        ];
+        if (!isLoggedIn) return publicItems;
+        return privateItems.filter(item => item.role === userRole);
+    }, [isLoggedIn, userRole]);
 
     const handleNavigation = (path) => {
         navigate(path);
         setShowProfileDropdown(false);
+        setShowNotifDropdown(false);
     };
 
+    const displayName = userName || user?.nombre || 'Usuario'; 
+
     return (
-        <header className="bg-white border-b border-neutral-200 sticky top-0 z-50 shadow-sm font-sans">
+        <header className="bg-neutral-800 sticky top-0 z-50 shadow-sm font-sans">
             <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
                 
-                {/* --- LOGO --- */}
-                <Link to="/" className="flex items-center gap-2 group">
-                    <img 
-                        src={logoImg} 
-                        alt="Logo Entrena+" 
-                        className="h-25 w-25 object-contain hover:scale-105 transition-transform" 
-                    />
+                <Link to="/" className="flex items-center gap-2">
+                    <img src={logoImg} alt="Logo Entrena+" className="h-25 w-25 object-contain hover:scale-105 transition-transform" />
                 </Link>
 
-                {/* --- NAVEGACIÓN CENTRAL --- */}
-                {!isLoggedIn ? (
-                    // OPCIÓN A: MENÚ PÚBLICO (TEXTO SIMPLE)
-                    <nav className="hidden md:flex gap-8 font-medium text-sm text-neutral-600">
-                        <Link to="/" className="hover:text-purple-500 transition-colors">Inicio</Link>
-                        <Link to="/clases" className="hover:text-purple-500 transition-colors">Clases</Link>
-                        <Link to="/membresias" className="hover:text-purple-500 transition-colors">Planes</Link>
-                        <Link to="/informacion" className="hover:text-purple-500 transition-colors">Nosotros</Link>
-                    </nav>
-                ) : (
-                    // OPCIÓN B: MENÚ PRIVADO (ICONOS + BARRA MORADA)
-                    <nav className="hidden md:flex items-center relative gap-1 bg-neutral-50 p-1 rounded-xl border border-neutral-100">
-                        {activeIndex !== -1 && (
-                            <div 
-                                className="absolute h-9 bg-purple-500 rounded-lg transition-all duration-300 ease-in-out shadow-lg shadow-purple-200"
-                                style={{ 
-                                    width: `calc(${100 / visibleItems.length}% - 4px)`,
-                                    left: '2px',
-                                    transform: `translateX(${activeIndex * 100}%)`,
-                                    zIndex: 0 
-                                }}
-                            />
-                        )}
-                        {visibleItems.map((item) => (
+                <nav className="hidden md:flex items-center gap-8">
+                    {menuItems.map((item) => {
+                        const active = location.pathname.startsWith(item.path) && (item.path !== '/' || location.pathname === '/');
+                        return (
                             <button
                                 key={item.id}
                                 onClick={() => handleNavigation(item.path)}
-                                className={`relative z-10 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors duration-300 min-w-[110px] ${
-                                    activeIndex !== -1 && visibleItems[activeIndex].id === item.id 
-                                    ? 'text-white' : 'text-neutral-500 hover:text-neutral-900'
+                                className={`flex items-center gap-2 text-sm font-medium transition-colors duration-200 ${
+                                    active ? 'text-purple-600 font-bold' : 'text-neutral-300 hover:text-purple-500'
                                 }`}
                             >
-                                <item.icon size={16} strokeWidth={2.5} />
-                                <span className="font-bold text-xs lg:text-sm">{item.label}</span>
+                                <item.icon size={18} strokeWidth={active ? 2.5 : 2} />
+                                <span>{item.label}</span>
                             </button>
-                        ))}
-                    </nav>
-                )}
+                        );
+                    })}
+                </nav>
 
-                {/* --- BOTONES DE ACCIÓN (DERECHA) --- */}
                 <div className="flex items-center gap-4">
                     {!isLoggedIn ? (
-                        // BOTONES PÚBLICOS: INGRESAR Y REGISTRARSE
                         <>
-                            <button 
-                                onClick={onLoginClick}
-                                className="hidden md:flex items-center font-medium text-sm text-neutral-600 hover:text-purple-600 transition-colors px-3"
-                            >Iniciar Sesión
+                            <button onClick={onLoginClick} className="hidden md:flex items-center font-medium text-sm text-neutral-600 hover:text-purple-600 transition-colors px-3">
+                                Iniciar Sesión
                             </button>
-                            <button 
-                                onClick={onRegisterClick}
-                                className="px-5 py-2 bg-purple-500 text-white rounded-lg font-bold text-sm shadow-lg shadow-purple-200 hover:bg-purple-600 transition-all"
-                            >Registrarse
+                            <button onClick={onRegisterClick} className="px-5 py-2 bg-purple-500 text-white rounded-lg font-bold text-sm shadow-lg shadow-purple-200 hover:bg-purple-600 transition-all">
+                                Registrarse
                             </button>
                         </>
                     ) : (
-                        // PERFIL DE USUARIO (LOGUEADO)
-                        <div className="relative">
-                            <button 
-                                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                                className="flex items-center gap-2 p-1 pr-3 bg-neutral-50 rounded-full border border-neutral-100 hover:border-purple-200 transition-all"
-                            >
-                                <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md uppercase">
-                                    {userName ? userName.charAt(0) : 'U'}
-                                </div>
-                                <div className="hidden lg:block text-left">
-                                    <p className="text-[11px] font-bold text-neutral-900 leading-none mb-0.5">{userName}</p>
-                                    <p className="text-[9px] text-purple-500 font-bold uppercase tracking-wider">{userRole}</p>
-                                </div>
-                                <ChevronDown size={14} className={`text-neutral-400 transition-transform duration-300 ${showProfileDropdown ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            {/* Dropdown Menu */}
-                            {showProfileDropdown && (
-                                <div className="absolute right-0 mt-3 w-48 bg-white rounded-2xl shadow-xl border border-neutral-100 py-2 z-[60]">
-                                    {userRole === 'socio' && (
-                                        <>
-                                            <button 
-                                                onClick={() => handleNavigation('/socio/perfil')}
-                                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-600 hover:bg-purple-50 hover:text-purple-600 transition-all font-semibold"
-                                            >
-                                                <User size={16} /> Mi Cuenta
-                                            </button>
-                                            <div className="h-px bg-neutral-100 my-1 mx-4"></div>
-                                        </>
+                        <div className="flex items-center gap-3">
+                            
+                            {/* --- COMPONENTE NOTIFICACIONES --- */}
+                            <div className="relative">
+                                <button 
+                                    onClick={() => { setShowNotifDropdown(!showNotifDropdown); setShowProfileDropdown(false); }}
+                                    className="relative p-2 rounded-full text-neutral-300 hover:bg-neutral-100 hover:text-purple-600 transition-all"
+                                >
+                                    <Bell size={20} />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                                        </span>
                                     )}
-                                    <button 
-                                        onClick={() => { onLogout(); setShowProfileDropdown(false); navigate('/'); }}
-                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 font-bold transition-all"
-                                    >
-                                        <LogOut size={16} /> Cerrar sesión
-                                    </button>
-                                </div>
-                            )}
+                                </button>
+                                
+                                {showNotifDropdown && (
+                                    <div className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-xl border border-neutral-100 overflow-hidden z-[70] animate-fade-in-up origin-top-right">
+                                        <div className="flex items-center justify-between px-4 py-3 bg-neutral-50 border-b border-neutral-100">
+                                            <h3 className="font-bold text-sm text-neutral-800">Notificaciones</h3>
+                                            {unreadCount > 0 && (
+                                                <button onClick={handleMarkAllRead} className="text-xs text-purple-600 hover:text-purple-700 font-semibold flex items-center gap-1">
+                                                    <Check size={12} /> Marcar leídas
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                            {notifications.length === 0 ? (
+                                                <div className="p-6 text-center text-neutral-400 text-sm">
+                                                    No tienes notificaciones
+                                                </div>
+                                            ) : (
+                                                notifications.map((notif) => (
+                                                    <div 
+                                                        key={notif.id} 
+                                                        onClick={() => handleMarkRead(notif.id)} 
+                                                        className={`px-4 py-3 border-b border-neutral-50 hover:bg-neutral-50 transition-colors cursor-pointer flex gap-3 ${
+                                                            notif.leido === false ? 'bg-purple-50/40' : ''
+                                                        }`}
+                                                    >
+                                                        <div className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${notif.leido === false ? 'bg-purple-500' : 'bg-neutral-200'}`} />
+                                                        <div className="flex-1">
+                                                            <p className={`text-sm ${notif.leido === false ? 'font-bold text-neutral-900' : 'font-medium text-neutral-600'}`}>
+                                                                {notif.titulo}
+                                                            </p>
+                                                            <p className="text-xs text-neutral-500 mt-0.5 line-clamp-2">
+                                                                {notif.mensaje}
+                                                            </p>
+                                                            <p className="text-[10px] text-neutral-400 mt-1 flex items-center gap-1">
+                                                                <Clock size={10} /> {formatTimeAgo(notif.fecha_creacion)}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* --- PERFIL --- */}
+                            <div className="relative">
+                                <button 
+                                    onClick={() => { setShowProfileDropdown(!showProfileDropdown); setShowNotifDropdown(false); }}
+                                    className="flex items-center gap-2 p-1 pr-3 bg-neutral-50 rounded-full border border-neutral-100 hover:border-purple-200 transition-all"
+                                >
+                                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md uppercase">
+                                        {displayName ? displayName.charAt(0) : 'U'}
+                                    </div>
+                                    <div className="hidden lg:block text-left">
+                                        <p className="text-[11px] font-bold text-neutral-900 leading-none mb-0.5">{displayName}</p>
+                                        <p className="text-[9px] text-purple-500 font-bold uppercase tracking-wider">{userRole}</p>
+                                    </div>
+                                    <ChevronDown size={14} className={`text-neutral-400 transition-transform duration-300 ${showProfileDropdown ? 'rotate-180' : ''}`} />
+                                </button>
+                                {showProfileDropdown && (
+                                    <div className="absolute right-0 mt-3 w-48 bg-white rounded-2xl shadow-xl border border-neutral-100 py-2 z-[60] animate-fade-in-up origin-top-right">
+                                        {userRole === 'socio' && (
+                                            <>
+                                                <button onClick={() => handleNavigation('/perfil')} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-600 hover:bg-purple-50 hover:text-purple-600 transition-all font-semibold">
+                                                    <User size={16} /> Mi Cuenta
+                                                </button>
+                                                <div className="h-px bg-neutral-100 my-1 mx-4"></div>
+                                            </>
+                                        )}
+                                        <button onClick={() => { onLogout(); navigate('/'); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 font-bold transition-all">
+                                            <LogOut size={16} /> Cerrar sesión
+                                        </button>
+                                    </div>
+                                )}
+                               
+                            </div>
                         </div>
                     )}
                 </div>

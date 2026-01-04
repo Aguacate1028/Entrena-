@@ -10,6 +10,11 @@ import Footer from './components/Footer';
 import LoginModal from './components/LoginModal';
 import RegisterModal from './components/RegisterModal';
 import Anuncios from './pages/Anuncios';
+import UpdatePassword from './pages/UpdatePassword';
+import { ToastProvider } from './context/ToastContext'; 
+import Perfil from './pages/Perfil';
+import Progreso from './pages/Progreso';
+import Guia from './pages/Guia';
 
 const AppContent = () => {
   // 1. Aquí traemos la información real del usuario desde tu AuthContext
@@ -29,6 +34,7 @@ const AppContent = () => {
       {/* 3. Pasamos las funciones AL HEADER para que los botones funcionen */}
       <Header 
         isLoggedIn={isAuthenticated}
+        user={user}
         userName={user?.nombre || ''}
         userRole={user?.rol || 'cliente'} // Por defecto cliente si no hay rol
         onLogout={logout}
@@ -45,12 +51,19 @@ const AppContent = () => {
               <Anuncios /> 
             </>
           } />
-          <Route path="/clases" element={<Clases />} />
+          <Route path="/clases" element={<Clases 
+          isLoggedIn={isAuthenticated} 
+          onOpenLogin={openLogin}/>} />
           <Route path="/membresias" element={<Membresias />} />
           <Route path="/informacion" element={<Informacion />} />
+          <Route path="/update-password" element={<UpdatePassword />} />
+
+          <Route path="/perfil" element={<Perfil/>} />
+          <Route path="/progreso" element={<Progreso/>}/>
+          <Route path="/guia" element={<Guia/>}/>
+
           
-          {/* Aquí puedes agregar tus rutas privadas de socio/admin más adelante */}
-          {/* <Route path="/socio/clases" element={<ClasesSocio />} /> */}
+
         </Routes>
       </main>
 
@@ -71,6 +84,7 @@ const AppContent = () => {
           onSwitchToLogin={openLogin}
         />
       )}
+      
     </div>
   );
 };
@@ -79,9 +93,11 @@ const AppContent = () => {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
+      <ToastProvider>
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   );
 }

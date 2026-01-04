@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Megaphone, Calendar, AlertTriangle, Info, Bell, Clock, ArrowRight } from 'lucide-react';
+import { Megaphone, Calendar, AlertTriangle, Info, BadgeInfo, Clock } from 'lucide-react';
 import { obtenerAnunciosRequest } from '../api/anuncios';
 
 const Anuncios = () => {
@@ -59,17 +59,17 @@ const Anuncios = () => {
     };
 
     return (
-        <section id="anuncios" className="py-24 bg-white border-b border-neutral-100">
+        <section id="anuncios" className="py-10 bg-white border-b border-neutral-100 cursor-not-allowed">
             <div className="max-w-7xl mx-auto px-4">
                 
                 {/* Cabecera de Sección */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
                     <div className="flex items-center gap-4">
                         <div className="p-3 bg-purple-600 rounded-2xl shadow-lg shadow-purple-200 rotate-3">
-                            <Bell className="w-6 h-6 text-white" />
+                            <BadgeInfo className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                            <h2 className="text-3xl font-bold text-neutral-900 tracking-tight">Tablón de Anuncios</h2>
+                            <h2 className="text-3xl font-bold text-neutral-900 tracking-tight">Anuncios</h2>
                             <p className="text-neutral-500 font-medium">Novedades importantes del gimnasio</p>
                         </div>
                     </div>
@@ -120,14 +120,11 @@ const Anuncios = () => {
                                     </div>
 
                                     {/* Footer de la Tarjeta */}
-                                    <div className="flex items-center justify-between pt-6 border-t border-neutral-100">
+                                    <div className="flex items-center justify-between pt-6 border-t border-neutral-100 ">
                                         <div className="flex items-center gap-2 text-neutral-400 text-xs font-bold uppercase tracking-wider">
                                             <Clock size={14} />
                                             {formatDate(item.fecha)}
                                         </div>
-                                        <button className="opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all duration-300 text-purple-600">
-                                            <ArrowRight size={20} />
-                                        </button>
                                     </div>
                                 </div>
                             );

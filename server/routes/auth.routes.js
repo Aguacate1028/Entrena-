@@ -57,4 +57,25 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// RUTA PARA RECUPERAR CONTRASEÑA
+router.post('/forgot-password', async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        // Supabase envía el correo automáticamente
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            // Esta URL es a donde llegará el usuario al dar clic en el correo
+            // Asegúrate de que el puerto 5173 sea el de tu Frontend (Vite)
+            redirectTo: 'http://localhost:5173/update-password',
+        });
+
+        if (error) throw error;
+
+        res.json({ success: true, message: "Correo enviado" });
+    } catch (err) {
+        console.error("Error recuperación:", err.message);
+        res.status(400).json({ error: err.message });
+    }
+});
+
 export default router;
