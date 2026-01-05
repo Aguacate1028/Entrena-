@@ -37,3 +37,6 @@ Thumbs.db
 
 # Temporales de base de datos
 *.sql.bak
+
+node_modules/
+client/node_modules/
