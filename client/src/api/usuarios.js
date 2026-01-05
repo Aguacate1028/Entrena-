@@ -4,11 +4,14 @@ const API_URL = 'http://localhost:5000/api';
 export const obtenerPerfilRequest = async (idUsuario) => {
     try {
         const response = await fetch(`${API_URL}/usuarios/${idUsuario}`);
-        if (!response.ok) throw new Error('Error al cargar perfil');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error en el servidor');
+        }
         return await response.json();
     } catch (error) {
         console.error("Error obteniendo perfil:", error);
-        return null;
+        return null; // El frontend ahora sabe manejar este null con la guarda que pusimos arriba
     }
 };
 

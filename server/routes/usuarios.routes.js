@@ -21,7 +21,7 @@ router.get('/:id', async (req, res) => {
     try {
         const { data: usuario, error } = await supabase
             .from('usuarios')
-            .select('*, entrenadores(*)') 
+            .select('*') 
             .eq('id_usuario', id)
             .single();
 
@@ -130,6 +130,7 @@ router.delete('/objetivos/:id', async (req, res) => {
 });
 
 // 6. SUBIR FOTO
+// En tu router.post('/:id/foto')
 router.post('/:id/foto', upload.single('archivo'), async (req, res) => {
     const { id } = req.params;
     const file = req.file;
@@ -137,15 +138,35 @@ router.post('/:id/foto', upload.single('archivo'), async (req, res) => {
 
     try {
         const fileName = `avatar_${id}_${Date.now()}.png`;
-        const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file.buffer, { contentType: file.mimetype, upsert: true });
-        if (uploadError) throw uploadError;
+        
+        // 1. Intento de subida
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(fileName, file.buffer, { 
+                contentType: file.mimetype, 
+                upsert: true 
+            });
 
-        const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
-        const { error: dbError } = await supabase.from('usuarios').update({ foto_perfil: publicUrl }).eq('id_usuario', id);
+        if (uploadError) {
+            console.error("Error subiendo a Storage:", uploadError); // Esto te dirá si es falta de permisos
+            return res.status(500).json({ error: uploadError.message });
+        }
+
+        // 2. Obtener URL pública
+        const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+        const publicUrl = data.publicUrl;
+
+        // 3. Actualizar base de datos
+        const { error: dbError } = await supabase
+            .from('usuarios')
+            .update({ foto_perfil: publicUrl })
+            .eq('id_usuario', id);
+
         if (dbError) throw dbError;
 
         res.json({ message: "Foto actualizada", url: publicUrl });
     } catch (err) {
+        console.error("Error completo:", err);
         res.status(500).json({ error: err.message });
     }
 });
