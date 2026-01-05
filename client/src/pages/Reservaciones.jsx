@@ -2,16 +2,9 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { 
     Dumbbell, Timer, Users, Play, 
-    CheckCircle2, XCircle, ArrowRight, Loader2, AlertCircle
+    CheckCircle2, XCircle, ArrowRight, Loader2
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
-import { 
-    obtenerMaquinasRequest, 
-    obtenerMiTurnoRequest, 
-    unirseFilaRequest, 
-    finalizarTurnoRequest, 
-    abandonarFilaRequest 
-} from '../api/reservas';
 
 const Reservaciones = () => {
     const { user } = useContext(AuthContext);
