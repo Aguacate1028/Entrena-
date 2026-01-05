@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { supabase } from '../supabase'; // Asegúrate de que esta sea la ruta a tu cliente supabase
 import { 
     Dumbbell, Timer, Users, Play, 
-    CheckCircle2, XCircle, ArrowRight, Loader2
+    CheckCircle2, XCircle, ArrowRight, Loader2, AlertCircle
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { 
+    obtenerMaquinasRequest, 
+    obtenerMiTurnoRequest, 
+    unirseFilaRequest, 
+    finalizarTurnoRequest, 
+    abandonarFilaRequest 
+} from '../api/reservas';
 
 const Reservaciones = () => {
     const { user } = useContext(AuthContext);
@@ -14,164 +20,104 @@ const Reservaciones = () => {
     const [maquinas, setMaquinas] = useState([]);
     const [miTurno, setMiTurno] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [errorServer, setErrorServer] = useState(false);
     
     const userId = user?.id_usuario || user?.id;
 
-    // Cargar datos iniciales y configurar suscripción Realtime
+// Dentro de fetchData en Reservaciones.jsx:
+const fetchData = async () => {
+    if (!userId) return;
+    try {
+        const dataMaquinas = await obtenerMaquinasRequest();
+        
+        // SEGURIDAD: Solo setear si es un Array real
+        if (Array.isArray(dataMaquinas)) {
+            setMaquinas(dataMaquinas);
+        } else {
+            setMaquinas([]); 
+        }
+
+        const dataTurno = await obtenerMiTurnoRequest(userId);
+        
+        // El backend devuelve null si no hay turno, lo manejamos:
+        if (dataTurno && !dataTurno.error) {
+            setMiTurno(dataTurno);
+        } else {
+            setMiTurno(null);
+        }
+
+    } catch (error) {
+        console.error("Error en reservaciones:", error);
+        setMaquinas([]);
+    } finally {
+        setLoading(false);
+    }
+};
+
     useEffect(() => {
-        if (!userId) return;
-
         fetchData();
-
-        // Suscripción a cambios en la fila de máquinas en tiempo real
-        const channel = supabase
-            .channel('realtime-gym-queue')
-            .on('postgres_changes', 
-                { event: '*', schema: 'public', table: 'fila_maquinas' }, 
-                () => fetchData()
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
+        const interval = setInterval(fetchData, 5000); // Polling cada 5s
+        return () => clearInterval(interval);
     }, [userId]);
 
-    const fetchData = async () => {
-        try {
-            // 1. Obtener máquinas con sus filas actuales
-            const { data: mData, error: mError } = await supabase
-                .from('maquinas')
-                .select('*, fila_maquinas(id, estado, id_usuario)');
-            
-            if (mError) throw mError;
-
-            const maquinasProcesadas = mData.map(m => ({
-                ...m,
-                personasEnFila: m.fila_maquinas.filter(f => f.estado === 'esperando').length,
-                estaOcupada: m.fila_maquinas.some(f => f.estado === 'usando'),
-                usuarioActual: m.fila_maquinas.find(f => f.estado === 'usando')?.id_usuario
-            }));
-            setMaquinas(maquinasProcesadas);
-
-            // 2. Obtener mi turno activo
-            const { data: tData, error: tError } = await supabase
-                .from('fila_maquinas')
-                .select('*, maquinas(nombre)')
-                .eq('id_usuario', userId)
-                .neq('estado', 'finalizado')
-                .maybeSingle();
-
-            if (tData) {
-                // Calcular posición contando cuántos registros 'esperando' tienen un ID menor al mío para esa máquina
-                const { count } = await supabase
-                    .from('fila_maquinas')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('id_maquina', tData.id_maquina)
-                    .eq('estado', 'esperando')
-                    .lt('id', tData.id);
-
-                const miPosicion = (count || 0) + 1;
-
-                // Notificaciones de proximidad
-                if (miTurno && miTurno.posicion !== miPosicion) {
-                    if (miPosicion === 2) addToast("¡Faltan 5 minutos para tu turno!", "info");
-                    if (miPosicion === 1) addToast("Solo queda una persona por delante", "info");
-                }
-                
-                // Si el estado cambió de esperando a usando
-                if (miTurno?.estado === 'esperando' && tData.estado === 'usando') {
-                    addToast("¡Es tu turno! La máquina está lista.", "success");
-                }
-
-                setMiTurno({ 
-                    ...tData, 
-                    posicion: tData.estado === 'usando' ? 0 : miPosicion,
-                    maquinaNombre: tData.maquinas.nombre 
-                });
-            } else {
-                setMiTurno(null);
-            }
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // --- ACCIONES ---
 
     const unirseAFila = async (maquina) => {
         if (miTurno) {
             addToast("Ya tienes una reservación activa", "error");
             return;
         }
-
-        const { error } = await supabase
-            .from('fila_maquinas')
-            .insert([{ 
-                id_maquina: maquina.id, 
-                id_usuario: userId, 
-                estado: maquina.estaOcupada ? 'esperando' : 'usando',
-                posicion: 0 // La posición real se calcula en el fetch
-            }]);
-
-        if (error) {
-            addToast("Error al unirse a la fila", "error");
-        } else {
+        try {
+            await unirseFilaRequest({
+                id_maquina: maquina.id,
+                id_usuario: userId,
+                estado: maquina.estaOcupada ? 'esperando' : 'usando'
+            });
             addToast(maquina.estaOcupada ? "Te has unido a la fila" : "Puedes usar la máquina ahora", "success");
+            fetchData();
+        } catch (error) {
+            addToast("Error al unirse a la fila", "error");
         }
     };
 
     const finalizarUso = async () => {
         try {
-            // 1. Finalizar mi turno
-            const { error: err1 } = await supabase
-                .from('fila_maquinas')
-                .update({ estado: 'finalizado' })
-                .eq('id', miTurno.id);
-            if (err1) throw err1;
-
-            // 2. Buscar al siguiente en la fila
-            const { data: siguiente } = await supabase
-                .from('fila_maquinas')
-                .select('id')
-                .eq('id_maquina', miTurno.id_maquina)
-                .eq('estado', 'esperando')
-                .order('id', { ascending: true })
-                .limit(1)
-                .maybeSingle();
-
-            // 3. Si hay alguien, pasarle el turno
-            if (siguiente) {
-                await supabase
-                    .from('fila_maquinas')
-                    .update({ estado: 'usando' })
-                    .eq('id', siguiente.id);
-            }
-
-            addToast("Entrenamiento finalizado correctamente", "success");
+            await finalizarTurnoRequest({
+                id_turno: miTurno.id,
+                id_maquina: miTurno.id_maquina
+            });
+            addToast("Entrenamiento finalizado", "success");
             setMiTurno(null);
             fetchData();
         } catch (error) {
-            addToast("Error al liberar la máquina", "error");
+            addToast("Error al finalizar", "error");
         }
     };
 
     const abandonarFila = async () => {
-        const { error } = await supabase
-            .from('fila_maquinas')
-            .delete()
-            .eq('id', miTurno.id);
-        
-        if (!error) {
-            addToast("Has abandonado la fila", "info");
+        try {
+            await abandonarFilaRequest(miTurno.id);
+            addToast("Fila abandonada", "info");
             setMiTurno(null);
+            fetchData();
+        } catch (error) {
+            addToast("Error al salir", "error");
         }
     };
 
     if (loading) return (
         <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-neutral-500">
             <Loader2 className="animate-spin" size={40} />
-            <p className="font-bold">Sincronizando máquinas...</p>
+            <p className="font-bold">Cargando gimnasio...</p>
+        </div>
+    );
+
+    if (errorServer) return (
+        <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center">
+            <div className="bg-red-50 p-6 rounded-full text-red-500"><AlertCircle size={48}/></div>
+            <h2 className="text-xl font-black text-gray-900">Sin conexión al servidor</h2>
+            <p className="text-gray-500 max-w-md">No pudimos cargar el estado del gimnasio. Verifica que el servidor (backend) esté encendido.</p>
+            <button onClick={fetchData} className="px-6 py-2 bg-gray-900 text-white rounded-xl font-bold mt-2">Reintentar</button>
         </div>
     );
 
@@ -183,12 +129,12 @@ const Reservaciones = () => {
                         <Dumbbell className="text-purple-600" size={32} />
                         Reservación en Tiempo Real
                     </h1>
-                    <p className="text-neutral-500 mt-2">Fila virtual inteligente para optimizar tu entrenamiento.</p>
+                    <p className="text-neutral-500 mt-2">Fila virtual inteligente.</p>
                 </header>
 
                 {/* TURNO ACTUAL */}
                 {miTurno && (
-                    <div className="mb-10 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="mb-10 animate-in fade-in slide-in-from-top-4">
                         <div className={`p-6 rounded-3xl border-2 flex flex-col md:flex-row items-center justify-between gap-6 ${
                             miTurno.estado === 'usando' ? 'bg-green-50 border-green-200' : 'bg-purple-50 border-purple-200'
                         }`}>
@@ -198,11 +144,11 @@ const Reservaciones = () => {
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold uppercase tracking-widest text-neutral-500">
-                                        {miTurno.estado === 'usando' ? 'En uso actualmente' : 'Tu posición en la fila'}
+                                        {miTurno.estado === 'usando' ? 'En uso actualmente' : 'Tu posición'}
                                     </p>
                                     <h2 className="text-2xl font-black text-neutral-900">{miTurno.maquinaNombre}</h2>
                                     {miTurno.estado === 'esperando' && (
-                                        <p className="text-purple-600 font-bold">Espera est: {miTurno.posicion * 10} min</p>
+                                        <p className="text-purple-600 font-bold">Espera aprox: {miTurno.posicion * 10} min</p>
                                     )}
                                 </div>
                             </div>
@@ -219,7 +165,7 @@ const Reservaciones = () => {
                                     </div>
                                 ) : (
                                     <button onClick={finalizarUso} className="w-full md:w-auto px-8 py-4 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-black shadow-lg shadow-green-100 flex items-center justify-center gap-2">
-                                        <CheckCircle2 size={20} /> FINALIZAR USO
+                                        <CheckCircle2 size={20} /> LIBERAR
                                     </button>
                                 )}
                             </div>
@@ -227,7 +173,7 @@ const Reservaciones = () => {
                     </div>
                 )}
 
-                {/* GRID DE MÁQUINAS */}
+                {/* LISTA DE MÁQUINAS */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {maquinas.map((maquina) => (
                         <div key={maquina.id} className="bg-white rounded-[32px] p-6 shadow-sm border border-neutral-100 hover:shadow-xl transition-all group">
@@ -249,29 +195,29 @@ const Reservaciones = () => {
                                 <div className="bg-neutral-50 p-3 rounded-2xl">
                                     <div className="flex items-center gap-2 text-neutral-400 mb-1">
                                         <Users size={14} />
-                                        <span className="text-[10px] font-bold uppercase">En Fila</span>
+                                        <span className="text-[10px] font-bold uppercase">Fila</span>
                                     </div>
-                                    <p className="font-bold text-neutral-800">{maquina.personasEnFila}</p>
+                                    <p className="font-bold text-neutral-800">{maquina.personasEnFila || 0}</p>
                                 </div>
                                 <div className="bg-neutral-50 p-3 rounded-2xl">
                                     <div className="flex items-center gap-2 text-neutral-400 mb-1">
                                         <Timer size={14} />
                                         <span className="text-[10px] font-bold uppercase">Espera</span>
                                     </div>
-                                    <p className="font-bold text-neutral-800">{maquina.personasEnFila * (maquina.tiempo_estimado_uso || 10)} min</p>
+                                    <p className="font-bold text-neutral-800">{(maquina.personasEnFila || 0) * (maquina.tiempo_estimado_uso || 10)}m</p>
                                 </div>
                             </div>
 
                             <button 
                                 onClick={() => unirseAFila(maquina)}
-                                disabled={miTurno}
+                                disabled={miTurno !== null}
                                 className={`w-full py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 ${
                                     miTurno 
                                     ? 'bg-neutral-100 text-neutral-300 cursor-not-allowed' 
                                     : 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-50'
                                 }`}
                             >
-                                {maquina.estaOcupada ? 'UNIRSE A LA FILA' : 'USAR AHORA'}
+                                {maquina.estaOcupada ? 'UNIRSE A FILA' : 'USAR AHORA'}
                                 <ArrowRight size={18} />
                             </button>
                         </div>

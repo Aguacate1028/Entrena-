@@ -17,6 +17,7 @@ import lockersRoutes from './routes/lockers.routes.js';
 import { iniciarScheduler } from './services/scheduler.js';
 import comunidadRoutes from './routes/comunidad.routes.js';
 import reportesRoutes from './routes/reportes.routes.js';
+import reservasRoutes from './routes/reservas.routes.js';
 
 
 
@@ -45,6 +46,7 @@ app.use('/api/entrenadores', entrenadoresRoutes);
 app.use('/api/lockers', lockersRoutes);
 app.use('/api/comunidad', comunidadRoutes);
 app.use('/api/reportes', reportesRoutes);
+app.use('/api/reservas', reservasRoutes);
 
 
 
