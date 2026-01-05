@@ -39,13 +39,26 @@ const Perfil = () => {
     }, [user]);
 
     const cargarDatos = async () => {
+    try {
         const userId = user.id_usuario || user.id;
         const dataPerfil = await obtenerPerfilRequest(userId);
+        
+        // Si el servidor falla (Error 500), dataPerfil será null
+        if (!dataPerfil) {
+            console.error("No se pudo obtener el perfil del servidor.");
+            setLoading(false);
+            return; // Evita que se ejecute el resto y rompa el componente
+        }
+
         const dataClases = await obtenerMisClasesRequest(userId);
-        if (dataPerfil) setPerfil(dataPerfil);
-        setMisClases(dataClases);
+        setPerfil(dataPerfil);
+        setMisClases(dataClases || []);
+    } catch (error) {
+        console.error("Error crítico en cargarDatos:", error);
+    } finally {
         setLoading(false);
-    };
+    }
+};
 
     const handlePhotoChange = async (e) => {
         const file = e.target.files[0];
@@ -62,8 +75,9 @@ const Perfil = () => {
         }
     };
 
+// Lógica de membresía basada en tu esquema de BD
     const calcularDiasRestantes = () => {
-        if (!perfil?.membresia_fin || perfil.membresia_tipo === 'Sin Membresía') return 0;
+        if (!perfil?.membresia_fin || perfil?.membresia_tipo === 'Sin Membresía') return 0;
         
         const fin = new Date(perfil.membresia_fin);
         const hoy = new Date();
@@ -72,7 +86,6 @@ const Perfil = () => {
         
         return diffDays > 0 ? diffDays : 0;
     };
-
     const diasRestantes = calcularDiasRestantes();
     const tieneMembresiaActiva = diasRestantes > 0 && perfil?.membresia_tipo !== 'Sin Membresía';
 
@@ -92,7 +105,17 @@ const Perfil = () => {
         }));
     };
 
-    if (loading) return <div className="min-h-screen bg-neutral-50 flex items-center justify-center">Cargando perfil...</div>;
+    if (loading) return <div className="min-h-screen bg-neutral-50 flex items-center justify-center font-bold text-purple-600">Sincronizando con Entrena+...</div>;
+    
+    // Si llegamos aquí y no hay perfil, mostramos error amigable en lugar de crashear
+    if (!perfil) return (
+        <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center p-4">
+            <AlertTriangle size={50} className="text-orange-500 mb-4" />
+            <h2 className="text-xl font-bold text-neutral-800">Error de conexión con el servidor</h2>
+            <p className="text-neutral-500 mb-4 text-center">No pudimos obtener tus datos. Verifica que tu sesión siga activa.</p>
+            <button onClick={() => window.location.reload()} className="bg-purple-600 text-white px-6 py-2 rounded-xl font-bold">Reintentar</button>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-neutral-50 pb-20">

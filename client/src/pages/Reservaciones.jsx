@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { supabase } from '../supabase'; // Asegúrate de que esta sea la ruta a tu cliente supabase
 import { 
     Dumbbell, Timer, Users, Play, 
-    CheckCircle2, XCircle, ArrowRight, Loader2
+    CheckCircle2, XCircle, ArrowRight, Loader2 
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+// IMPORTA DESDE TU CARPETA API
+import { 
+    obtenerMaquinasFilaRequest, 
+    unirseAFilaRequest, 
+    finalizarUsoRequest 
+} from '../api/reservaciones';
 
 const Reservaciones = () => {
     const { user } = useContext(AuthContext);

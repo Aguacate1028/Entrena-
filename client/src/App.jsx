@@ -24,6 +24,7 @@ import StaffSocios from './components/StaffSocios';
 import StaffLockers from './components/StaffLockers';
 import StaffPagos from './components/StaffPagos';
 import StaffReportes from './components/StaffReportes';
+import Finanzas from './pages/Finanzas';
 
 const AppContent = () => {
   // 1. Aquí traemos la información real del usuario desde tu AuthContext
@@ -101,6 +102,7 @@ const AppContent = () => {
           } />
 
            {/* Dashboard de Admin (Si es diferente al de staff) */}
+           <Route path="/finanzas" element={<Finanzas />} />
            <Route path="/dashboard" element={
              <StaffRoute><StaffDashboard /></StaffRoute>
           } />

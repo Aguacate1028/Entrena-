@@ -107,7 +107,7 @@ const Header = ({
             // ADMINISTRADOR
             { id: 'ad-dash', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', role: 'administrador' },
             { id: 'ad-reportes', label: 'Reportes', icon: FileText, path: '/reportes', role: 'administrador' },
-            { id: 'ad-pagos', label: 'Finanzas', icon: CreditCard, path: '/pagos', role: 'administrador' },
+            { id: 'ad-pagos', label: 'Finanzas', icon: CreditCard, path: '/finanzas', role: 'administrador' },
             { id: 'ad-rrhh', label: 'RRHH', icon: Briefcase, path: '/empleados', role: 'administrador' },
             { id: 'ad-users', label: 'Usuarios', icon: Users, path: '/usuarios', role: 'administrador' },
         ];
