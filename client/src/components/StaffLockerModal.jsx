@@ -3,6 +3,7 @@ import { X, User, Calendar, Save, Trash2, Search, CheckCircle, DollarSign, Credi
 import { asignarLockerRequest, liberarLockerRequest, obtenerTodosSociosRequest } from '../api/usuarios';
 import { useToast } from '../context/ToastContext';
 import ConfirmModal from './ConfirmModal';
+import { crearNotificacionRequest } from '../api/notificaciones';
 
 const LockerModal = ({ locker, onClose, onUpdate }) => {
     const { addToast } = useToast();
@@ -33,17 +34,25 @@ const LockerModal = ({ locker, onClose, onUpdate }) => {
     // CÁLCULO DEL TOTAL
     const totalPagar = PRECIO_MENSUAL * parseInt(meses);
 
-    // 1. ASIGNAR LOCKER
     const handleAsignar = async () => {
         if (!selectedSocio) return addToast('Selecciona un socio primero', 'error');
         
         setLoading(true);
         try {
+            // A. Asignar Locker
             await asignarLockerRequest({
                 id_usuario: selectedSocio.id_usuario,
                 locker_id: locker.numero,
                 meses: meses
             });
+
+            // B. [NUEVO] Crear Notificación para el Socio
+            await crearNotificacionRequest({
+                id_usuario: selectedSocio.id_usuario,
+                mensaje: `Se te ha asignado el Casillero #${locker.numero} por ${meses} mes(es).`,
+                tipo: 'success'
+            });
+
             addToast(`Casillero asignado. Cobrar: $${totalPagar}`, 'success');
             onUpdate();
             onClose();

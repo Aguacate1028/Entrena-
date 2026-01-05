@@ -1,4 +1,4 @@
-import { ArrowRight, Calendar } from 'lucide-react';
+import { ArrowRight, Calendar, LayoutDashboard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import LoginModal from '../components/LoginModal';
@@ -9,17 +9,34 @@ const Home = ({ user }) => {
     const [showLoginModal, setShowLoginModal] = useState(false);
     const BACKGROUND_URL = "https://www.staywithstylescottsdale.com/wp-content/uploads/2024/03/Featured-Image-Scottsdale-Gyms-1024x512.jpg";
 
-    // --- VISTA 1: USUARIO LOGUEADO  ---
+    // --- VISTA 1: USUARIO LOGUEADO ---
     if (user) {
+        const isStaff = user.rol === 'staff' || user.rol === 'administrador';
+
         return (
             <section className="text-black py-16 ">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="animate-fade-in-up">
-                        {/* Saludo convertido en Título Principal */}
-                        <h1 className="text-4xl font-black text-neutral-900 tracking-tight">Bienvenid@, <span className="text-purple-600  px-2 rounded-lg">{user.nombre}</span>👋</h1>
-                        <p className="text-neutral-900 text-lg">
-                            Recuerda mantener tu información actualizada en "Mi Cuenta"
-                        </p>
+                        {/* Saludo General */}
+                        <h1 className="text-4xl font-black text-neutral-900 tracking-tight mb-4">
+                            Bienvenid@, <span className="text-purple-600 px-2 rounded-lg">{user.nombre}</span>👋
+                        </h1>
+
+                        {/* MENSAJE CONDICIONAL SEGÚN ROL */}
+                        {isStaff ? (
+                            // --- VISTA PARA STAFF / ADMIN ---
+                            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 max-w-2xl">
+                                <p className="text-neutral-700 text-lg mb-4">
+                                    Tienes permisos de administración activos. Accede al panel para gestionar socios, reportes y configuración.
+                                </p>
+                            </div>
+                        ) : (
+                            // --- VISTA PARA SOCIOS ---
+                            <p className="text-neutral-900 text-lg">
+                                Recuerda mantener tu información actualizada en "Mi Cuenta" y revisar tus próximas clases.
+                            </p>
+                        )}
+
                     </div>
                 </div>
             </section>
@@ -73,7 +90,7 @@ const Home = ({ user }) => {
             {/* Modal Logic */}
             {showLoginModal && (
                 <div className="text-neutral-900">
-                    <LoginModal onClose={() => setShowLoginModal(false)} />  
+                    <LoginModal onClose={() => setShowLoginModal(false)} />   
                 </div>
             )}
         </section>   

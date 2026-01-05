@@ -43,3 +43,20 @@ export const marcarTodasLeidasRequest = async (idUsuario) => {
         return null;
     }
 };
+
+// [NUEVO] 4. Crear una nueva notificación (Para usar desde el Staff)
+export const crearNotificacionRequest = async (data) => {
+    // data espera: { id_usuario, mensaje, tipo }
+    try {
+        const response = await fetch(`${API_URL}/notificaciones`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!response.ok) throw new Error('Error al crear notificación');
+        return await response.json();
+    } catch (error) {
+        console.error("Error creando notificación:", error);
+        return null;
+    }
+};

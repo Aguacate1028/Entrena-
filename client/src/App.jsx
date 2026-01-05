@@ -23,6 +23,13 @@ import StaffSocios from './components/StaffSocios';
 import StaffLockers from './components/StaffLockers';
 import StaffPagos from './components/StaffPagos';
 import StaffReportes from './components/StaffReportes';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminEntrenadores from './pages/AdminEntrenadores';
+import AdminReportes from './pages/AdminReportes';
+import AdminUsuarios from './pages/AdminUsuarios';
+import AdminMembresias from './pages/AdminMembresias';
+import AdminInventario from './pages/AdminInventario';
+
 
 const AppContent = () => {
   // 1. Aquí traemos la información real del usuario desde tu AuthContext
@@ -105,7 +112,7 @@ const AppContent = () => {
           <Route 
             path="/staffpagos" 
             element={
-              isAuthenticated && (userRole === 'staff' || userRole === 'administrador') 
+              isAuthenticated && (userRole === 'staff') 
               ? <StaffPagos /> 
               : <Navigate to="/" />
             } 
@@ -114,6 +121,22 @@ const AppContent = () => {
               <StaffRoute><StaffReportes /></StaffRoute>
           } />
 
+          <Route path="/admindashboard" element={
+              <StaffRoute><AdminDashboard /></StaffRoute>
+          } />
+          <Route path="/adminentrenadores" element={
+              <StaffRoute><AdminEntrenadores /></StaffRoute>
+          } />
+          <Route path="/adminreportes" element={
+              <StaffRoute><AdminReportes /></StaffRoute>
+          } />
+          <Route path="/adminmembresias" element={
+              <StaffRoute><AdminMembresias /></StaffRoute>
+          } />
+          <Route path="/adminusuarios" element={
+              <StaffRoute><AdminUsuarios /></StaffRoute>
+          } />
+          <Route path="/admininventario" element={<StaffRoute><AdminInventario /></StaffRoute>} />
 
         </Routes>
       </main>

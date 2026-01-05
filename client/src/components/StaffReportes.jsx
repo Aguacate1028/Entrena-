@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { obtenerReportesRequest, responderReporteRequest, eliminarReporteRequest } from '../api/reportes';
 import ConfirmModal from './ConfirmModal'; 
 import ResponseModal from './ResponseModal'; 
+import { crearNotificacionRequest } from '../api/notificaciones';
 
 import { CheckCircle2, Clock, Trash2, MessageSquare, User, AlertTriangle, FileText, RefreshCw, Send } from 'lucide-react';
 
@@ -61,7 +62,20 @@ const StaffReportes = () => {
         if (!selectedId) return;
         setActionLoading(true);
         try {
+            // A. Enviamos la respuesta al reporte
             await responderReporteRequest(selectedId, { respuesta_admin: textoRespuesta });
+            
+            // B. [NUEVO] Buscamos el reporte original para saber a qué usuario notificar
+            const reporteActual = reportes.find(r => r.id === selectedId);
+            
+            if (reporteActual) {
+                await crearNotificacionRequest({
+                    id_usuario: reporteActual.id_usuario,
+                    mensaje: `Tu reporte sobre "${reporteActual.categoria}" ha sido respondido por el Staff.`,
+                    tipo: 'info' // o 'sistema'
+                });
+            }
+
             setIsResponseOpen(false);
             await cargarReportes();
         } catch (error) { 
