@@ -1,172 +1,182 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  DollarSign, Users, ArrowUpRight, CreditCard, 
-  Wallet, Landmark, Clock, Download, Loader2 
+  DollarSign, ArrowUpRight, CreditCard, 
+  Wallet, Landmark, Clock, Download, Loader2, TrendingUp 
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, 
   ResponsiveContainer, PieChart, Pie, Cell 
 } from 'recharts';
-import { obtenerPagosRequest } from '../api/finanzas';
+import { obtenerReporteFinancieroRequest } from '../api/finanzas';
 
 const Finanzas = () => {
-  const [metrics, setMetrics] = useState({ total: 0, count: 0, pending: 0 });
-  const [chartData, setChartData] = useState([]);
-  const [methodData, setMethodData] = useState([]);
-  const [recentPayments, setRecentPayments] = useState([]);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadFinancialData();
+    loadData();
   }, []);
 
-  const loadFinancialData = async () => {
-    setLoading(true);
-    try {
-      const pagos = await obtenerPagosRequest();
-      
-      if (pagos && pagos.length > 0) {
-        // 1. Procesar Ingresos y Pendientes
-        const total = pagos.filter(p => p.estado_pago === 'Completado').reduce((acc, p) => acc + Number(p.monto), 0);
-        const pending = pagos.filter(p => p.estado_pago === 'Pendiente').reduce((acc, p) => acc + Number(p.monto), 0);
-        
-        // 2. Procesar Métodos de Pago para Gráfica Circular
-        const metodos = {
-          Tarjeta: pagos.filter(p => p.metodo_pago === 'Tarjeta').length,
-          Efectivo: pagos.filter(p => p.metodo_pago === 'Efectivo').length,
-          Transferencia: pagos.filter(p => p.metodo_pago === 'Transferencia').length,
-        };
-
-        setMethodData([
-          { name: 'Tarjeta', value: metodos.Tarjeta, color: '#9333ea' },
-          { name: 'Efectivo', value: metodos.Efectivo, color: '#22c55e' },
-          { name: 'Transfer', value: metodos.Transferencia, color: '#3b82f6' },
-        ]);
-
-        // 3. Simular Historial para Gráfica de Área
-        setChartData([
-          { name: 'Ago', total: 500 }, { name: 'Sep', total: 700 },
-          { name: 'Oct', total: 900 }, { name: 'Nov', total: 850 },
-          { name: 'Dic', total: 1100 }, { name: 'Ene', total: total }
-        ]);
-
-        setMetrics({ total, count: pagos.length, pending });
-        setRecentPayments(pagos.slice(0, 6));
-      }
-    } catch (error) {
-      console.error("Error al cargar finanzas:", error);
-    } finally {
-      setLoading(false);
-    }
+  const loadData = async () => {
+    const report = await obtenerReporteFinancieroRequest();
+    setData(report);
+    setLoading(false);
   };
 
   if (loading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-3">
-        <Loader2 className="animate-spin text-purple-600" size={40} />
-        <p className="font-bold text-neutral-500">Analizando balance general...</p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-neutral-50">
+        <Loader2 className="animate-spin text-purple-600 mb-4" size={48} />
+        <h2 className="text-xl font-bold text-neutral-700">Consolidando estados de cuenta...</h2>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-neutral-50 p-6 lg:p-10">
       <div className="max-w-7xl mx-auto">
-        <header className="flex justify-between items-end mb-10">
+        
+        {/* Header con Select de Período */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
           <div>
-            <h1 className="text-4xl font-black text-neutral-900 tracking-tight">Panel <span className="text-purple-600">Financiero</span></h1>
-            <p className="text-neutral-500 font-medium">Resumen de transacciones y rentabilidad del mes.</p>
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-3xl font-black text-neutral-900 tracking-tight">Reporte <span className="text-purple-600">Financiero</span></h1>
+            </div>
+            <p className="text-neutral-500 font-medium">Análisis de rentabilidad y flujo de efectivo del gimnasio.</p>
           </div>
-          <button className="flex items-center gap-2 bg-neutral-900 text-white px-6 py-3 rounded-2xl font-bold shadow-lg hover:bg-black transition-all">
-            <Download size={18}/> Descargar Reporte
-          </button>
+          
+          <div className="flex gap-3 w-full md:w-auto">
+            <select className="bg-white border border-neutral-200 px-4 py-3 rounded-2xl font-bold text-sm shadow-sm focus:ring-2 focus:ring-purple-500 outline-none">
+              <option>Este Mes</option>
+              <option>Último Trimestre</option>
+              <option>Año 2026</option>
+            </select>
+          </div>
         </header>
 
-        {/* MÉTRICAS PRINCIPALES */}
+        {/* Métricas con diseño "Glassmorphism" suave */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <MetricCard label="Caja Total" value={`$${metrics.total}`} icon={DollarSign} color="purple" trend="+15%" />
-          <MetricCard label="Pagos por Cobrar" value={`$${metrics.pending}`} icon={Clock} color="orange" trend="Pendientes" />
-          <MetricCard label="Operaciones" value={metrics.count} icon={ArrowUpRight} color="green" trend="Mensual" />
+          <MetricCard 
+            label="Ingresos Totales" 
+            value={`$${data.metrics.total.toLocaleString()}`} 
+            icon={DollarSign} 
+            color="purple" 
+            sub="Corte al día de hoy"
+          />
+          <MetricCard 
+            label="Ticket Promedio" 
+            value={`$${(data.metrics.total / data.metrics.count).toFixed(2)}`} 
+            icon={Landmark} 
+            color="blue" 
+            sub="Por cada transacción"
+          />
+          <MetricCard 
+            label="Volumen Operativo" 
+            value={`${data.metrics.count} pagos`} 
+            icon={ArrowUpRight} 
+            color="green" 
+            sub="Transacciones liquidadas"
+          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* GRÁFICA DE INGRESOS */}
-          <div className="lg:col-span-2 bg-white p-8 rounded-[40px] shadow-sm border border-neutral-100">
-            <h3 className="text-xl font-bold text-neutral-800 mb-8">Flujo de Ingresos</h3>
+          {/* Gráfica Principal de Rendimiento */}
+          <div className="lg:col-span-2 bg-white p-8 rounded-[3rem] shadow-sm border border-neutral-100">
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="text-xl font-bold text-neutral-800">Crecimiento Mensual</h3>
+              <span className="text-xs font-bold text-purple-600 bg-purple-50 px-3 py-1 rounded-full">Actualizado hace un momento</span>
+            </div>
             <div className="h-[350px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
+                <AreaChart data={data.chartData}>
                   <defs>
                     <linearGradient id="colorGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#9333ea" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#9333ea" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} dy={10} />
                   <YAxis axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
-                  <Tooltip contentStyle={{borderRadius: '20px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}} />
-                  <Area type="monotone" dataKey="total" stroke="#a855f7" strokeWidth={4} fill="url(#colorGrad)" />
+                  <Tooltip 
+                    contentStyle={{borderRadius: '24px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'}} 
+                    itemStyle={{fontWeight: 'bold', color: '#9333ea'}}
+                  />
+                  <Area type="monotone" dataKey="total" stroke="#9333ea" strokeWidth={4} fill="url(#colorGrad)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* MÉTODOS DE PAGO */}
-          <div className="bg-white p-8 rounded-[40px] shadow-sm border border-neutral-100 flex flex-col items-center">
-            <h3 className="text-xl font-bold text-neutral-800 mb-6 w-full text-center">Distribución de Pagos</h3>
-            <div className="h-[250px] w-full">
+          {/* KPI de Fuentes de Ingreso */}
+          <div className="bg-white p-8 rounded-[3rem] shadow-sm border border-neutral-100 flex flex-col">
+            <h3 className="text-xl font-bold text-neutral-800 mb-2">Conceptos</h3>
+            <p className="text-neutral-400 text-sm mb-6">¿De dónde viene tu dinero?</p>
+            
+            <div className="h-[220px] w-full mb-6">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={methodData} innerRadius={60} outerRadius={80} paddingAngle={8} dataKey="value">
-                    {methodData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
+                  <Pie data={data.methodData} innerRadius={70} outerRadius={90} paddingAngle={10} dataKey="value">
+                    {data.methodData.map((entry, index) => <Cell key={index} fill={entry.color} cornerRadius={10} />)}
                   </Pie>
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="w-full space-y-3 mt-6">
-              {methodData.map((m, i) => (
-                <div key={i} className="flex justify-between items-center text-sm font-bold">
-                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{backgroundColor: m.color}}/> <span className="text-neutral-500 uppercase">{m.name}</span></div>
-                  <span className="text-neutral-900">{m.value} ops.</span>
+
+            <div className="space-y-4">
+              {data.methodData.map((m, i) => (
+                <div key={i} className="flex justify-between items-center p-3 rounded-2xl bg-neutral-50 border border-neutral-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full" style={{backgroundColor: m.color}}/>
+                    <span className="text-sm font-bold text-neutral-600">{m.name}</span>
+                  </div>
+                  <span className="font-black text-neutral-900">{m.value} ops.</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* TABLA DE ÚLTIMOS PAGOS */}
-        <div className="mt-8 bg-white rounded-[40px] shadow-sm border border-neutral-100 overflow-hidden">
-          <div className="p-8 border-b border-neutral-50 flex justify-between items-center">
-            <h3 className="text-xl font-bold text-neutral-800">Transacciones Recientes</h3>
+        {/* Tabla de Auditoría */}
+        <div className="mt-8 bg-white rounded-[3rem] shadow-sm border border-neutral-100 overflow-hidden">
+          <div className="p-8 border-b border-neutral-50 flex justify-between items-center bg-neutral-50/30">
+            <div>
+              <h3 className="text-xl font-bold text-neutral-800">Libro Diario</h3>
+              <p className="text-xs text-neutral-400 font-medium">Auditoría detallada de flujos de entrada</p>
+            </div>
+            <button className="text-sm font-bold text-purple-600 hover:underline">Ver todo el historial</button>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-neutral-50/50 text-neutral-400 text-[10px] font-black uppercase tracking-widest">
+            <table className="w-full">
+              <thead className="bg-white text-neutral-400 text-[10px] font-black uppercase tracking-[0.2em]">
                 <tr>
-                  <th className="px-8 py-4">Socio</th>
-                  <th className="px-8 py-4">Concepto</th>
-                  <th className="px-8 py-4">Método</th>
-                  <th className="px-8 py-4">Estado</th>
-                  <th className="px-8 py-4 text-right">Monto</th>
+                  <th className="px-10 py-5 text-left">Socio Beneficiario</th>
+                  <th className="px-10 py-5 text-left">Glosa de Pago</th>
+                  <th className="px-10 py-5 text-center">Fecha Valor</th>
+                  <th className="px-10 py-5 text-right">Monto Neto</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-50">
-                {recentPayments.map((p) => (
-                  <tr key={p.id} className="hover:bg-neutral-50/50 transition-colors">
-                    <td className="px-8 py-5 font-bold text-neutral-800 text-sm">{p.usuarios?.nombre}</td>
-                    <td className="px-8 py-5 text-neutral-500 text-sm">{p.concepto}</td>
-                    <td className="px-8 py-5">
-                       <span className="flex items-center gap-2 text-xs font-bold text-neutral-600">
-                          {p.metodo_pago === 'Tarjeta' ? <CreditCard size={14}/> : p.metodo_pago === 'Efectivo' ? <Wallet size={14}/> : <Landmark size={14}/>}
-                          {p.metodo_pago}
-                       </span>
+                {data.recentPayments.map((p) => (
+                  <tr key={p.id} className="hover:bg-neutral-50/80 transition-all group">
+                    <td className="px-10 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xs">
+                          {p.usuarios?.nombre?.charAt(0)}
+                        </div>
+                        <span className="font-bold text-neutral-800 text-sm">{p.usuarios?.nombre}</span>
+                      </div>
                     </td>
-                    <td className="px-8 py-5">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${p.estado_pago === 'Completado' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}`}>
-                        {p.estado_pago}
+                    <td className="px-10 py-5 text-neutral-500 text-sm font-medium">{p.concepto}</td>
+                    <td className="px-10 py-5 text-center">
+                      <span className="text-xs font-bold text-neutral-400">
+                        {new Date(p.fecha).toLocaleDateString()}
                       </span>
                     </td>
-                    <td className="px-8 py-5 text-right font-black text-neutral-900">${p.monto}</td>
+                    <td className="px-10 py-5 text-right">
+                      <span className="font-black text-neutral-900 group-hover:text-purple-600 transition-colors">
+                        ${Number(p.monto).toLocaleString()}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -178,20 +188,26 @@ const Finanzas = () => {
   );
 };
 
-const MetricCard = ({ label, value, icon: Icon, color, trend }) => {
-  const styles = {
-    purple: 'bg-purple-50 text-purple-600 border-purple-100',
-    orange: 'bg-orange-50 text-orange-600 border-orange-100',
-    green: 'bg-green-50 text-green-600 border-green-100',
+const MetricCard = ({ label, value, icon: Icon, color, sub }) => {
+  const themes = {
+    purple: 'border-purple-100 hover:border-purple-400',
+    blue: 'border-blue-100 hover:border-blue-400',
+    green: 'border-green-100 hover:border-green-400',
   };
+  const iconThemes = {
+    purple: 'bg-purple-600 text-white',
+    blue: 'bg-blue-600 text-white',
+    green: 'bg-green-600 text-white',
+  };
+
   return (
-    <div className={`p-8 rounded-[40px] border-2 shadow-sm transition-transform hover:scale-105 ${styles[color]}`}>
+    <div className={`p-8 bg-white rounded-[3rem] border-2 shadow-sm transition-all hover:shadow-xl hover:-translate-y-1 ${themes[color]}`}>
       <div className="flex justify-between items-start mb-6">
-        <div className="p-4 bg-white rounded-3xl shadow-sm"><Icon size={28}/></div>
-        <span className="text-[10px] font-black uppercase tracking-widest bg-white/50 px-3 py-1 rounded-full">{trend}</span>
+        <div className={`p-4 rounded-2xl shadow-lg ${iconThemes[color]}`}><Icon size={24}/></div>
       </div>
-      <p className="text-[11px] font-black uppercase tracking-widest opacity-60 mb-1">{label}</p>
-      <p className="text-4xl font-black tracking-tighter">{value}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 mb-1">{label}</p>
+      <p className="text-4xl font-black text-neutral-900 tracking-tighter mb-1">{value}</p>
+      <p className="text-xs font-bold text-neutral-400">{sub}</p>
     </div>
   );
 };

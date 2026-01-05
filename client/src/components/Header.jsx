@@ -108,7 +108,7 @@ const Header = ({
             { id: 's-anuncios', label: 'Anuncios', icon: BadgeInfo, path: '/', role: 'administrador' },
             { id: 'ad-dash', label: 'Panel', icon: LayoutDashboard, path: '/admindashboard', role: 'administrador' },
             { id: 'ad-reportes', label: 'Reportes', icon: FileText, path: '/adminreportes', role: 'administrador' },
-            { id: 'ad-pagos', label: 'Finanzas', icon: CreditCard, path: '/adminpagos', role: 'administrador' },
+            { id: 'ad-pagos', label: 'Finanzas', icon: CreditCard, path: '/finanzas', role: 'administrador' },
             { id: 'ad-rrhh', label: 'Entrenadores', icon: Dumbbell, path: '/adminentrenadores', role: 'administrador' },
             { id: 'ad-users', label: 'Usuarios', icon: Users, path: '/adminusuarios', role: 'administrador' },
         ];

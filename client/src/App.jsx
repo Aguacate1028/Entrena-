@@ -30,6 +30,7 @@ import AdminReportes from './pages/AdminReportes';
 import AdminUsuarios from './pages/AdminUsuarios';
 import AdminMembresias from './pages/AdminMembresias';
 import AdminInventario from './pages/AdminInventario';
+import Finanzas from './pages/Finanzas';
 
 const AppContent = () => {
   // 1. Aquí traemos la información real del usuario desde tu AuthContext
@@ -134,6 +135,7 @@ const AppContent = () => {
               <StaffRoute><AdminUsuarios /></StaffRoute>
           } />
           <Route path="/admininventario" element={<StaffRoute><AdminInventario /></StaffRoute>} />
+          <Route path="/finanzas" element={<StaffRoute><Finanzas /></StaffRoute>} />
 
         </Routes>
       </main>

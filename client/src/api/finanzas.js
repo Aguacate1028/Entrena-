@@ -1,24 +1,29 @@
-const API_URL = 'http://localhost:5000/api/finanzas';
+const API_URL = 'http://localhost:5000/api';
 
-// Obtener el historial de pagos y métricas financieras
 export const obtenerPagosRequest = async () => {
     try {
-        const response = await fetch(`${API_URL}/pagos/historial`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.message || 'Error al obtener datos financieros');
-        }
-
-        return data;
+        const response = await fetch(`${API_URL}/usuarios/administrador/pagos`);
+        if (!response.ok) throw new Error('Error al obtener pagos');
+        return await response.json();
     } catch (error) {
-        console.error("Error en obtenerPagosRequest:", error);
-        throw error;
+        console.error(error);
+        return [];
+    }
+};
+
+export const obtenerReporteFinancieroRequest = async () => {
+    try {
+        const response = await fetch(`${API_URL}/usuarios/staff/reporte-financiero`);
+        if (!response.ok) throw new Error('Error al obtener reporte');
+        return await response.json();
+    } catch (error) {
+        console.error("Error en API Finanzas:", error);
+        // Retorno de emergencia para que la app no explote si el back falla
+        return {
+            metrics: { total: 0, count: 0 },
+            chartData: [],
+            methodData: [],
+            recentPayments: []
+        };
     }
 };

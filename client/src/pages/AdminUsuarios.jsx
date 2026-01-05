@@ -55,7 +55,7 @@ const AdminUsuarios = () => {
                         </p>
                     </div>
                     <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                        <p className="text-xs font-bold text-gray-400 uppercase">Staff & Entrenadores</p>
+                        <p className="text-xs font-bold text-gray-400 uppercase">Staff & administrador</p>
                         <p className="text-2xl font-black text-purple-600">
                             {usuarios.filter(u => u.rol !== 'socio').length}
                         </p>

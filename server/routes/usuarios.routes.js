@@ -384,4 +384,90 @@ router.get('/staff/pagos', async (req, res) => {
     }
 });
 
+// OBTENER TODOS LOS PAGOS (Historial para Admin)
+router.get('/administrador/pagos', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('pagos')
+            .select(`
+                id, 
+                monto, 
+                fecha, 
+                concepto,
+                usuarios (
+                    nombre,
+                    email
+                )
+            `)
+            .order('fecha', { ascending: false });
+
+        if (error) throw error;
+
+        // Mapeo dinámico: Si tu tabla no tiene estos campos, los simulamos 
+        // para que el componente no se rompa, o idealmente agrégalos a la DB.
+        const pagosProcesados = data.map(p => ({
+            ...p,
+            metodo_pago: p.metodo_pago || 'Efectivo', // Fallback
+            estado_pago: 'Completado' // En tu tabla 'pagos' actual, si existe el registro es que se pagó
+        }));
+
+        res.json(pagosProcesados);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// REPORTE DE INTELIGENCIA FINANCIERA
+router.get('/staff/reporte-financiero', async (req, res) => {
+    try {
+        const { data: pagos, error } = await supabase
+            .from('pagos')
+            .select('id, monto, fecha, concepto, usuarios(nombre)')
+            .order('fecha', { ascending: false });
+
+        if (error) throw error;
+
+        // 1. Cálculo de Ingresos Totales
+        const totalCaja = pagos.reduce((acc, p) => acc + Number(p.monto), 0);
+        
+        // 2. Agrupación por Mes (Dinámica según tu columna 'fecha')
+        const historicoMap = pagos.reduce((acc, p) => {
+            const mes = new Date(p.fecha).toLocaleDateString('es-MX', { month: 'short' });
+            acc[mes] = (acc[mes] || 0) + Number(p.monto);
+            return acc;
+        }, {});
+
+        const chartData = Object.keys(historicoMap).map(name => ({
+            name: name.charAt(0).toUpperCase() + name.slice(1),
+            total: historicoMap[name]
+        })).reverse();
+
+        // 3. Mix de Ingresos (Analizando tu columna 'concepto')
+        const counts = { mem: 0, lock: 0, otr: 0 };
+        pagos.forEach(p => {
+            const desc = p.concepto?.toLowerCase() || '';
+            if (desc.includes('locker')) counts.lock++;
+            else if (desc.includes('pago') || desc.includes('membresía')) counts.mem++;
+            else counts.otr++;
+        });
+
+        res.json({
+            metrics: { 
+                total: totalCaja, 
+                count: pagos.length,
+                ticketPromedio: pagos.length > 0 ? (totalCaja / pagos.length).toFixed(2) : 0
+            },
+            chartData,
+            methodData: [
+                { name: 'Membresías', value: counts.mem, color: '#9333ea' },
+                { name: 'Lockers', value: counts.lock, color: '#3b82f6' },
+                { name: 'Otros', value: counts.otr, color: '#22c55e' }
+            ],
+            recentPayments: pagos.slice(0, 10)
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 export default router;
