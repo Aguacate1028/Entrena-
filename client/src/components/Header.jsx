@@ -105,11 +105,20 @@ const Header = ({
             { id: 'st-lockers', label: 'Lockers', icon: LockIcon, path: '/stafflockers', role: 'staff' },
 
             // ADMINISTRADOR
+<<<<<<< HEAD
             { id: 'ad-dash', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', role: 'administrador' },
             { id: 'ad-reportes', label: 'Reportes', icon: FileText, path: '/reportes', role: 'administrador' },
             { id: 'ad-pagos', label: 'Finanzas', icon: CreditCard, path: '/finanzas', role: 'administrador' },
             { id: 'ad-rrhh', label: 'RRHH', icon: Briefcase, path: '/empleados', role: 'administrador' },
             { id: 'ad-users', label: 'Usuarios', icon: Users, path: '/usuarios', role: 'administrador' },
+=======
+            { id: 's-anuncios', label: 'Anuncios', icon: BadgeInfo, path: '/', role: 'administrador' },
+            { id: 'ad-dash', label: 'Panel', icon: LayoutDashboard, path: '/admindashboard', role: 'administrador' },
+            { id: 'ad-reportes', label: 'Reportes', icon: FileText, path: '/adminreportes', role: 'administrador' },
+            { id: 'ad-pagos', label: 'Finanzas', icon: CreditCard, path: '/adminpagos', role: 'administrador' },
+            { id: 'ad-rrhh', label: 'Entrenadores', icon: Dumbbell, path: '/adminentrenadores', role: 'administrador' },
+            { id: 'ad-users', label: 'Usuarios', icon: Users, path: '/adminusuarios', role: 'administrador' },
+>>>>>>> a5db22499e1ebdea3f2428b7dd484c7f8cba2ff7
         ];
 
         if (!isLoggedIn) return publicItems;
