@@ -48,11 +48,11 @@ const Footer = () => {
                             </li>
                             <li className="flex items-center gap-3">
                                 <Phone size={20} className="text-purple-500 flex-shrink-0" />
-                                <span className="text-sm">+52 55 1234 5678</span>
+                                <span className="text-sm">+52 55 7991 7885</span>
                             </li>
                             <li className="flex items-center gap-3">
                                 <Mail size={20} className="text-purple-500 flex-shrink-0" />
-                                <span className="text-sm">hola@entrenaplus.com</span>
+                                <span className="text-sm">kamehouse@gmail.com</span>
                             </li>
                         </ul>
                     </div>
@@ -63,15 +63,15 @@ const Footer = () => {
                         <ul className="space-y-3">
                             <li className="flex justify-between text-sm border-b border-neutral-800 pb-2">
                                 <span>Lunes - Viernes</span>
-                                <span className="text-white font-medium">5:00 AM - 11:00 PM</span>
+                                <span className="text-white font-medium">7:00 AM - 10:00 PM</span>
                             </li>
                             <li className="flex justify-between text-sm border-b border-neutral-800 pb-2">
                                 <span>Sábados</span>
-                                <span className="text-white font-medium">7:00 AM - 8:00 PM</span>
+                                <span className="text-white font-medium">9:00 AM - 10:00 PM</span>
                             </li>
                             <li className="flex justify-between text-sm pb-2">
                                 <span>Domingos</span>
-                                <span className="text-white font-medium">8:00 AM - 4:00 PM</span>
+                                <span className="text-white font-medium">CERRADO</span>
                             </li>
                         </ul>
                         <div className="mt-6 p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
