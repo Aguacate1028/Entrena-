@@ -3,7 +3,8 @@ import { AuthContext } from '../context/AuthContext';
 import { 
     Mail, Phone, MapPin, Calendar, Edit2, 
     Flame, Clock, Target, Dumbbell, Zap, Plus, Trash2,
-    Activity, Ruler, Weight, AlertTriangle, Camera, Droplet // <-- Importamos Droplet para sangre
+    Activity, Ruler, Weight, AlertTriangle, Camera, Droplet, // <-- Importamos Droplet para sangre
+    Lock // <-- Importamos Lock para el estado inactivo
 } from 'lucide-react';
 import ClaseDetalleModal from '../components/ClaseDetalleModal'; 
 import EditarPerfilModal from '../components/EditarPerfilModal'; 
@@ -60,6 +61,20 @@ const Perfil = () => {
             setUploadingPhoto(false);
         }
     };
+
+    const calcularDiasRestantes = () => {
+        if (!perfil?.membresia_fin || perfil.membresia_tipo === 'Sin Membresía') return 0;
+        
+        const fin = new Date(perfil.membresia_fin);
+        const hoy = new Date();
+        const diffTime = fin - hoy;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        return diffDays > 0 ? diffDays : 0;
+    };
+
+    const diasRestantes = calcularDiasRestantes();
+    const tieneMembresiaActiva = diasRestantes > 0 && perfil?.membresia_tipo !== 'Sin Membresía';
 
     const handleAddGoal = async (e) => {
         e.preventDefault();
@@ -149,16 +164,33 @@ const Perfil = () => {
                     <div className="space-y-8">
                         {/* Tarjeta Membresía & QR FIXED */}
                         <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+                            {/* Cabecera dinámica de la tarjeta */}
                             <div className="bg-gradient-to-r from-purple-500 to-fuchsia-500 p-6 text-white">
                                 <div className="flex justify-between items-start">
-                                    <div><p className="text-xs opacity-80 uppercase tracking-wider">Membresía</p><p className="text-2xl font-bold">{perfil.membresia_tipo}</p></div>
+                                    <div>
+                                        <p className="text-xs opacity-80 uppercase tracking-wider">Membresía</p>
+                                        <p className="text-2xl font-bold">{perfil.membresia_tipo || 'Sin Membresía'}</p>
+                                    </div>
                                 </div>
-                                <div className="mt-8"><div className="flex justify-between text-sm mb-1"><span>Vence en</span><span className="font-bold">365 días</span></div><div className="h-2 bg-black/20 rounded-full"><div className="h-full bg-white w-[80%] rounded-full"></div></div></div>
+                                <div className="mt-8">
+                                    <div className="flex justify-between text-sm mb-1">
+                                        <span>Vence en</span>
+                                        <span className="font-bold">{diasRestantes} días</span>
+                                    </div>
+                                    {/* Barra de progreso: se va a 0 si no hay membresía activa */}
+                                    <div className="h-2 bg-black/20 rounded-full">
+                                        <div 
+                                            className="h-full bg-white transition-all duration-1000 rounded-full" 
+                                            style={{ width: `${tieneMembresiaActiva ? Math.min((diasRestantes / 30) * 100, 100) : 0}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
                             </div>
+
                             <div className="p-8 flex flex-col items-center bg-white">
-                                {/* CORRECCIÓN DEL QR: Usamos perfil.id_usuario en lugar de user.id_usuario */}
-                                <div className="border-4 border-purple-50 p-4 rounded-3xl mb-4 bg-white shadow-inner">
-                                    {perfil?.id_usuario ? (
+                                {/* Contenedor de QR o Candado */}
+                                <div className={`border-4 p-4 rounded-3xl mb-4 bg-white shadow-inner flex items-center justify-center transition-all ${tieneMembresiaActiva ? 'border-purple-50' : 'border-red-50 bg-red-50/10'}`}>
+                                    {tieneMembresiaActiva ? (
                                         <QRCode 
                                             value={perfil.id_usuario.toString()} 
                                             size={140} 
@@ -166,10 +198,21 @@ const Perfil = () => {
                                             bgColor="#FFFFFF" 
                                         />
                                     ) : (
-                                        <div className="w-[140px] h-[140px] bg-gray-100 animate-pulse rounded-xl"></div>
+                                        <div className="w-[140px] h-[140px] flex flex-col items-center justify-center text-red-400 gap-2">
+                                            <Lock size={64} strokeWidth={1.5} />
+                                            <span className="text-[10px] font-bold uppercase tracking-tighter">Acceso Denegado</span>
+                                        </div>
                                     )}
                                 </div>
+                                
                                 <p className="text-xs text-neutral-400 font-mono">ID: {perfil?.id_usuario || '---'}</p>
+                                
+                                {/* Aviso de renovación */}
+                                {!tieneMembresiaActiva && (
+                                    <p className="mt-4 text-xs text-red-500 font-bold bg-red-50 px-4 py-1.5 rounded-full border border-red-100">
+                                        Renueva tu membresía para entrar
+                                    </p>
+                                )}
                             </div>
                         </div>
 
