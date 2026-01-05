@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, Dumbbell, CreditCard, Info, Users, TrendingUp, BookOpen, 
   LayoutDashboard, QrCode, LockIcon, FileText, Briefcase,
-  LogOut, User, ChevronDown, Bell, Check, Clock, BadgeInfo
+  LogOut, User, ChevronDown, Bell, Check, Clock, BadgeInfo, Calendar
 } from 'lucide-react';
 import logoImg from '../img/logo.png'; 
 import { 
@@ -89,6 +89,7 @@ const Header = ({
             // SOCIO
             { id: 's-anuncios', label: 'Anuncios', icon: BadgeInfo, path: '/', role: 'socio' },
             { id: 's-clases', label: 'Clases', icon: Dumbbell, path: '/clases', role: 'socio' },
+            { id: 's-reservas', label: 'Reservación', icon: Calendar, path: '/reservaciones', role: 'socio' },
             { id: 'planes', label: 'Membresías', icon: CreditCard, path: '/membresias', role: 'socio' },
             { id: 's-comunidad', label: 'Comunidad', icon: Users, path: '/comunidad', role: 'socio' },
             { id: 's-progreso', label: 'Progreso', icon: TrendingUp, path: '/progreso', role: 'socio' },
