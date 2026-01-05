@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { X, Lock, CreditCard } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { rentarLockerRequest } from '../api/lockers'; // <--- IMPORTAMOS LA API
+import { rentarLockerRequest } from '../api/lockers'; 
 
 const LockerModal = ({ onClose, onSuccess }) => {
     const { user } = useContext(AuthContext);

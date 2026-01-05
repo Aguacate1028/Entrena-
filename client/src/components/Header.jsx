@@ -89,17 +89,19 @@ const Header = ({
             // SOCIO
             { id: 's-anuncios', label: 'Anuncios', icon: BadgeInfo, path: '/', role: 'socio' },
             { id: 's-clases', label: 'Clases', icon: Dumbbell, path: '/clases', role: 'socio' },
+            { id: 'planes', label: 'Membresías', icon: CreditCard, path: '/membresias', role: 'socio' },
             { id: 's-comunidad', label: 'Comunidad', icon: Users, path: '/comunidad', role: 'socio' },
             { id: 's-progreso', label: 'Progreso', icon: TrendingUp, path: '/progreso', role: 'socio' },
             { id: 's-guia', label: 'Guía', icon: BookOpen, path: '/guia', role: 'socio' },
             { id: 's-reportes', label: 'Reportes', icon: FileText, path: '/reportes', role: 'socio' },
 
             // STAFF
+            { id: 's-anuncios', label: 'Anuncios', icon: BadgeInfo, path: '/', role: 'staff' },
             { id: 'st-dash', label: 'Panel', icon: LayoutDashboard, path: '/staffdashboard', role: 'staff' },
             { id: 'st-accesos', label: 'Accesos', icon: QrCode, path: '/staffscanner', role: 'staff' },
             { id: 'st-socios', label: 'Socios', icon: Users, path: '/staffsocios', role: 'staff' },
-            { id: 'st-pagos', label: 'Cobros', icon: CreditCard, path: '/staffpagos', role: 'staff' },
-            { id: 'st-lockers', label: 'Casilleros', icon: LockIcon, path: '/stafflockers', role: 'staff' },
+            { id: 'st-pagos', label: 'Pagos', icon: CreditCard, path: '/staffpagos', role: 'staff' },
+            { id: 'st-lockers', label: 'Lockers', icon: LockIcon, path: '/stafflockers', role: 'staff' },
 
             // ADMINISTRADOR
             { id: 'ad-dash', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', role: 'administrador' },
@@ -127,7 +129,7 @@ const Header = ({
             <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
                 
                 <Link to="/" className="flex items-center gap-2">
-                    <img src={logoImg} alt="Logo Entrena+" className="h-12 object-contain hover:scale-105 transition-transform" />
+                    <img src={logoImg} alt="Logo Entrena+" className="h-20 object-contain hover:scale-105 transition-transform" />
                 </Link>
 
                 <nav className="hidden md:flex items-center gap-6">

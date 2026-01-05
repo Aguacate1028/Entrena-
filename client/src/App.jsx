@@ -18,7 +18,10 @@ import Guia from './pages/Guia';
 import Comunidad from './pages/Comunidad';
 import Reportes from './pages/Reportes';
 import StaffDashboard from './components/StaffDashboard';
-
+import StaffScanner from './components/StaffScanner';
+import StaffSocios from './components/StaffSocios';
+import StaffLockers from './components/StaffLockers';
+import StaffPagos from './components/StaffPagos';
 
 const AppContent = () => {
   // 1. Aquí traemos la información real del usuario desde tu AuthContext
@@ -33,6 +36,11 @@ const AppContent = () => {
   const openLogin = () => { setIsLoginOpen(true); setIsRegisterOpen(false); };
   const openRegister = () => { setIsRegisterOpen(true); setIsLoginOpen(false); };
   const closeAll = () => { setIsLoginOpen(false); setIsRegisterOpen(false); };
+
+  const StaffRoute = ({ children }) => {
+      const isStaffOrAdmin = isAuthenticated && (userRole === 'staff' || userRole === 'administrador');
+      return isStaffOrAdmin ? children : <Navigate to="/" />;
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -69,11 +77,35 @@ const AppContent = () => {
           <Route path="/guia" element={<Guia/>}/>
           <Route path="/comunidad" element={<Comunidad/>}/>
           <Route path="/reportes" element={<Reportes/>}/>
+
+          <Route path="/staffdashboard" element={
+            <StaffRoute><StaffDashboard /></StaffRoute>
+          } />
+
+          {/* 2. Escáner de QR */}
+          <Route path="/staffscanner" element={
+            <StaffRoute><StaffScanner /></StaffRoute>
+          } />
+
+          {/* 3. Lista de Socios */}
+          <Route path="/staffsocios" element={
+             <StaffRoute><StaffSocios /></StaffRoute>
+          } />
+
+          {/* 4. Casilleros */}
+          <Route path="/stafflockers" element={
+             <StaffRoute><StaffLockers /></StaffRoute>
+          } />
+
+           {/* Dashboard de Admin (Si es diferente al de staff) */}
+           <Route path="/dashboard" element={
+             <StaffRoute><StaffDashboard /></StaffRoute>
+          } />
           <Route 
-            path="/dashboard" 
+            path="/staffpagos" 
             element={
               isAuthenticated && (userRole === 'staff' || userRole === 'administrador') 
-              ? <StaffDashboard /> 
+              ? <StaffPagos /> 
               : <Navigate to="/" />
             } 
           />
