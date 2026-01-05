@@ -64,10 +64,6 @@ const StaffPagos = () => {
                             onChange={(e) => setBusqueda(e.target.value)}
                         />
                     </div>
-                    
-                    <button className="flex items-center gap-2 px-5 py-3 bg-white border border-neutral-200 text-neutral-600 rounded-xl text-sm font-bold hover:bg-neutral-50 transition-colors">
-                        <Download size={18} /> Exportar CSV
-                    </button>
                 </div>
 
                 {/* Tabla de Pagos */}

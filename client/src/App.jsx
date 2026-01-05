@@ -22,6 +22,7 @@ import StaffScanner from './components/StaffScanner';
 import StaffSocios from './components/StaffSocios';
 import StaffLockers from './components/StaffLockers';
 import StaffPagos from './components/StaffPagos';
+import StaffReportes from './components/StaffReportes';
 
 const AppContent = () => {
   // 1. Aquí traemos la información real del usuario desde tu AuthContext
@@ -109,6 +110,9 @@ const AppContent = () => {
               : <Navigate to="/" />
             } 
           />
+          <Route path="/staffreportes" element={
+              <StaffRoute><StaffReportes /></StaffRoute>
+          } />
 
 
         </Routes>
