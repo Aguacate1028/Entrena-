@@ -31,11 +31,11 @@ import AdminUsuarios from './pages/AdminUsuarios';
 import AdminMembresias from './pages/AdminMembresias';
 import AdminInventario from './pages/AdminInventario';
 
-
 const AppContent = () => {
   // 1. Aquí traemos la información real del usuario desde tu AuthContext
   const { user, isAuthenticated, logout, signup } = useContext(AuthContext);
   const userRole = user?.rol;
+  
   
   // 2. ESTADOS PARA LOS MODALES 
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -105,11 +105,6 @@ const AppContent = () => {
           {/* 4. Casilleros */}
           <Route path="/stafflockers" element={
              <StaffRoute><StaffLockers /></StaffRoute>
-          } />
-
-           {/* Dashboard de Admin (Si es diferente al de staff) */}
-           <Route path="/dashboard" element={
-             <StaffRoute><StaffDashboard /></StaffRoute>
           } />
           <Route 
             path="/staffpagos" 

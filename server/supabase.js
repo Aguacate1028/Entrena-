@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY; // Cambiado de SERVICE_KEY a KEY
+const supabaseKey = process.env.SUPABASE_KEY;
 
 // Validación de seguridad
 if (!supabaseUrl || !supabaseKey) {
