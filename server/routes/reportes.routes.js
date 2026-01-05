@@ -3,14 +3,19 @@ import { supabase } from '../supabase.js';
 
 const router = Router();
 
-// 1. CREAR REPORTE (Usuario)
+// ==========================================
+// RUTAS PARA EL USUARIO (APP)
+// ==========================================
+
+// 1. CREAR REPORTE
 router.post('/', async (req, res) => {
-    const { id_usuario, categoria, descripcion } = req.body;
+    const { id_usuario, categoria, descripcion, prioridad } = req.body;
     try {
         const { data, error } = await supabase
             .from('reportes')
-            .insert([{ id_usuario, categoria, descripcion }]) 
-            .select();
+            .insert([{ id_usuario, categoria, descripcion, prioridad }])
+            .select()
+            .single();
 
         if (error) throw error;
         res.status(201).json(data);
@@ -19,13 +24,16 @@ router.post('/', async (req, res) => {
     }
 });
 
-// 2. OBTENER TODOS (Staff)
-router.get('/', async (req, res) => {
+// 2. OBTENER MIS REPORTES (Historial del usuario)
+// IMPORTANTE: Le cambié la ruta a '/usuario/:id' para que sea específica
+router.get('/usuario/:id_usuario', async (req, res) => {
+    const { id_usuario } = req.params;
     try {
         const { data, error } = await supabase
             .from('reportes')
             .select('*')
-            .order('fecha_creacion', { ascending: false }); 
+            .eq('id_usuario', id_usuario)
+            .order('fecha_creacion', { ascending: false });
 
         if (error) throw error;
         res.json(data);
@@ -34,16 +42,36 @@ router.get('/', async (req, res) => {
     }
 });
 
-// 3. RESPONDER (Staff)
+
+// ==========================================
+// RUTAS PARA EL STAFF (PANEL WEB) - ¡ESTAS FALTABAN!
+// ==========================================
+
+// 3. OBTENER TODOS LOS REPORTES (Para que el Staff vea la lista)
+router.get('/', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('reportes')
+            .select('*')
+            .order('fecha_creacion', { ascending: false }); // Ordenar por fecha
+
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 4. RESPONDER REPORTE (Staff)
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
-    const { respuesta_admin } = req.body; 
+    const { respuesta_admin } = req.body; // Recibimos la respuesta del admin
 
     try {
         const { data, error } = await supabase
             .from('reportes')
             .update({ 
-                estado: 'Resuelto',   
+                estado: 'Resuelto', 
                 respuesta_admin: respuesta_admin 
             })
             .eq('id', id)
@@ -51,12 +79,12 @@ router.put('/:id', async (req, res) => {
 
         if (error) throw error;
 
-        // Crear notificación para el usuario
+        // Opcional: Crear notificación al usuario de que le respondieron
         if(data && data.length > 0) {
-            await supabase.from('notificaciones').insert({
+             await supabase.from('notificaciones').insert({
                 id_usuario: data[0].id_usuario,
-                titulo: 'Reporte Resuelto',
-                mensaje: `El staff ha respondido a tu reporte de ${data[0].categoria}.`,
+                titulo: 'Reporte Actualizado',
+                mensaje: `El staff respondió a tu reporte de ${data[0].categoria}.`,
                 tipo: 'success',
                 leido: false
             });
@@ -68,7 +96,7 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// 4. ELIMINAR (Staff)
+// 5. ELIMINAR REPORTE (Staff)
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -79,24 +107,6 @@ router.delete('/:id', async (req, res) => {
 
         if (error) throw error;
         res.json({ message: "Reporte eliminado" });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// 5. OBTENER MIS REPORTES (Usuario)
-// Esta ruta es indispensable para que funcione el historial en Reportes.jsx
-router.get('/usuario/:idUsuario', async (req, res) => {
-    const { idUsuario } = req.params;
-    try {
-        const { data, error } = await supabase
-            .from('reportes')
-            .select('*')
-            .eq('id_usuario', idUsuario)
-            .order('fecha_creacion', { ascending: false });
-
-        if (error) throw error;
-        res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
