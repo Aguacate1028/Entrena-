@@ -10,20 +10,14 @@ export const obtenerPagosRequest = async () => {
         return [];
     }
 };
-
 export const obtenerReporteFinancieroRequest = async () => {
     try {
-        const response = await fetch(`${API_URL}/usuarios/staff/reporte-financiero`);
+        // Asegúrate de que la ruta sea /admin/reporte-financiero
+        const response = await fetch(`${API_URL}/admin/reporte-financiero`); 
         if (!response.ok) throw new Error('Error al obtener reporte');
         return await response.json();
     } catch (error) {
         console.error("Error en API Finanzas:", error);
-        // Retorno de emergencia para que la app no explote si el back falla
-        return {
-            metrics: { total: 0, count: 0 },
-            chartData: [],
-            methodData: [],
-            recentPayments: []
-        };
+        return null; // Cambiado a null para que el componente muestre el Loader o error
     }
 };

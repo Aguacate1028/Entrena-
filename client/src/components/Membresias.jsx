@@ -79,15 +79,15 @@ const Membresias = () => {
         if (!datosUsuario || !selectedPlan) return;
         setProcessing(true);
         try {
+            // Esta función debe enviar los datos al endpoint /procesar corregido anteriormente
             await procesarPagoRequest({
                 id_usuario: datosUsuario.id_usuario,
-                id_plan: selectedPlan.id,
-                metodo_pago: 'tarjeta_simulada'
+                id_plan: selectedPlan.id
             });
 
-            addToast(`¡Bienvenido al plan ${selectedPlan.nombre}!`, 'success');
+            addToast(`¡Bienvenido al plan ${selectedPlan.nombre}! El pago ha sido registrado.`, 'success');
             setShowPaymentModal(false);
-            await recargarUsuario();
+            await recargarUsuario(); // Refresca los datos locales del usuario
         } catch (error) {
             addToast(error.message || 'Error al procesar pago', 'error');
         } finally {

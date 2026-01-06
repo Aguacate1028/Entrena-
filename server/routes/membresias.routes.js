@@ -42,42 +42,36 @@ router.get('/planes', async (req, res) => {
 // Procesar Pago
 router.post('/procesar', async (req, res) => {
     const { id_usuario, id_plan } = req.body;
-    
-    console.log(`[PAGO] Iniciando proceso para Usuario: ${id_usuario}, Plan ID: ${id_plan}`);
-
     try {
-        // 1. Verificar plan
+        // 1. Obtener datos del plan (nombre y precio)
         const { data: plan, error: errorPlan } = await supabase
             .from('membresias')
-            .select('nombre')
+            .select('nombre, precio')
             .eq('id', id_plan)
             .single();
 
-        if (errorPlan || !plan) {
-            return res.status(404).json({ error: "El plan seleccionado no existe." });
-        }
+        if (errorPlan || !plan) return res.status(404).json({ error: "Plan no encontrado" });
 
-        // 2. Calcular fecha fin
+        // 2. Actualizar usuario
         const fechaFin = new Date();
         fechaFin.setMonth(fechaFin.getMonth() + 1);
-        const fechaFinString = fechaFin.toISOString().split('T')[0];
+        
+        await supabase.from('usuarios').update({
+            membresia_tipo: plan.nombre,
+            membresia_fin: fechaFin.toISOString().split('T')[0],
+            estado_suscripcion: 'activa'
+        }).eq('id_usuario', id_usuario);
 
-        // 3. Actualizar usuario
-        const { error: updateError } = await supabase
-            .from('usuarios')
-            .update({
-                membresia_tipo: plan.nombre,
-                membresia_fin: fechaFinString,
-                estado_suscripcion: 'activa'
-            })
-            .eq('id_usuario', id_usuario);
+        // 3. REGISTRAR EL PAGO AUTOMÁTICAMENTE
+        await supabase.from('pagos').insert([{
+            id_usuario: id_usuario,
+            monto: plan.precio,
+            concepto: `Compra membresía: ${plan.nombre}`,
+            fecha: new Date()
+        }]);
 
-        if (updateError) throw updateError;
-
-        res.json({ message: "Pago exitoso", success: true });
-
+        res.json({ message: "Pago y membresía registrados", success: true });
     } catch (error) {
-        console.error("[PAGO FATAL]", error);
         res.status(500).json({ error: error.message });
     }
 });

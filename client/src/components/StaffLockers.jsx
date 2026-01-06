@@ -28,11 +28,12 @@ const StaffLockers = () => {
 
     // Combinar grilla con datos de BD
     const getLockerStatus = (numero) => {
-        const ocupante = lockersData.find(u => u.locker_id === numero);
+        const ocupante = lockersData.find(u => u.locker_id === numero && u.locker_activo === true);
+        
         return {
             numero,
             ocupado: !!ocupante,
-            usuario: ocupante || null // Aquí ahora vendrá el id_usuario gracias al paso 1
+            usuario: ocupante || null 
         };
     };
 

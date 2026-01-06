@@ -103,6 +103,7 @@ const Header = ({
             { id: 'st-socios', label: 'Socios', icon: Users, path: '/staffsocios', role: 'staff' },
             { id: 'st-pagos', label: 'Pagos', icon: CreditCard, path: '/staffpagos', role: 'staff' },
             { id: 'st-lockers', label: 'Lockers', icon: LockIcon, path: '/stafflockers', role: 'staff' },
+            { id: 'ad-reportes', label: 'Reportes', icon: FileText, path: '/staffreportes', role: 'staff' },
 
             // ADMINISTRADOR
             { id: 's-anuncios', label: 'Anuncios', icon: BadgeInfo, path: '/', role: 'administrador' },

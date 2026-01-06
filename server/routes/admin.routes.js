@@ -32,6 +32,39 @@ router.get('/finanzas', async (req, res) => {
         res.json({ pagos: pagos || [], nomina_total: nomina });
     } catch (err) { res.status(500).json({ error: "Error finanzas" }); }
 });
+router.get('/reporte-financiero', async (req, res) => {
+    try {
+        const { data: pagos, error } = await supabase
+            .from('pagos')
+            .select('*, usuarios(nombre)')
+            .order('fecha', { ascending: false });
+
+        if (error) throw error;
+
+        // Cálculos para Recharts
+        const total = pagos.reduce((acc, p) => acc + Number(p.monto), 0);
+        const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        
+        const chartData = meses.map((m, index) => ({
+            name: m,
+            total: pagos.filter(p => new Date(p.fecha).getMonth() === index)
+                         .reduce((acc, p) => acc + Number(p.monto), 0)
+        })).filter(m => m.total > 0 || meses.indexOf(m.name) <= new Date().getMonth());
+
+        res.json({
+            metrics: { total, count: pagos.length },
+            chartData,
+            methodData: [
+                { name: 'Membresías', value: pagos.filter(p => p.concepto.includes('membresía')).length, color: '#9333ea' },
+                { name: 'Otros', value: pagos.filter(p => !p.concepto.includes('membresía')).length, color: '#22c55e' }
+            ],
+            recentPayments: pagos.slice(0, 10)
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // 1. LEER (GET)
 router.get('/entrenadores-list', async (req, res) => {
