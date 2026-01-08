@@ -4,8 +4,8 @@ import { obtenerLockersRequest } from '../api/usuarios';
 import LockerModal from './StaffLockerModal'; 
 
 const StaffLockers = () => {
-    // Generamos 20 casilleros estáticos (o 60, según tu gym)
-    const TOTAL_LOCKERS = 20;
+    // Generamos 40 casilleros estáticos (o 60, según tu gym)
+    const TOTAL_LOCKERS = 30;
     const [lockersData, setLockersData] = useState([]); 
     const [selectedLocker, setSelectedLocker] = useState(null); 
     const [loading, setLoading] = useState(true);

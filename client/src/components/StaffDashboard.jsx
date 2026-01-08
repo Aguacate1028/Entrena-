@@ -23,7 +23,7 @@ const StaffDashboard = () => {
     const stats = [
         { label: 'Socios Activos', value: realStats.sociosActivos, icon: Users, color: 'text-green-600', bg: 'bg-green-50' },
         { label: 'Accesos hoy', value: realStats.accesosHoy, icon: Activity, color: 'text-purple-600', bg: 'bg-purple-50' },
-        { label: 'Lockers ocupados', value: `${realStats.lockersOcupados}/20`, icon: Lock, color: 'text-blue-600', bg: 'bg-blue-50' },
+        { label: 'Lockers ocupados', value: `${realStats.lockersOcupados}/40`, icon: Lock, color: 'text-blue-600', bg: 'bg-blue-50' },
         { label: 'Ganancias Mes', value: `$${realStats.gananciasMes}`, icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-50' },
     ];
 

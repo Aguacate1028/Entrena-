@@ -1,26 +1,27 @@
 const API_URL = 'http://localhost:5000/api';
 
-// Registrar asistencia mediante QR
-export const registrarAsistenciaRequest = async (idUsuario) => {
+// Registrar asistencia mediante QR o Manual
+export const registrarAsistenciaRequest = async (dataBody) => {
     try {
         const response = await fetch(`${API_URL}/asistencias/registrar`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ id_usuario: idUsuario })
+            // Enviamos el objeto dataBody tal cual viene (ya contiene { id_usuario: ... })
+            body: JSON.stringify(dataBody) 
         });
 
         const data = await response.json();
 
-        // Si el status no es 200-299 (ej. 403 Membresía Vencida o 404 Usuario no encontrado)
         if (!response.ok) {
+            // Capturamos el mensaje del backend (ej: "Socio no encontrado")
             throw new Error(data.message || 'Error al registrar asistencia');
         }
 
         return data;
     } catch (error) {
-        console.error("Error en registro asistencia:", error);
-        throw error; // Lanzamos el error para que el componente muestre la pantalla roja
+        console.error("Error en registrarAsistenciaRequest:", error);
+        throw error; 
     }
 };
