@@ -20,30 +20,57 @@ router.get('/dashboard', async (req, res) => {
     } catch (err) { res.status(500).json({ error: "Error dashboard" }); }
 });
 
-// --- FINANZAS / REPORTES ---
 router.get('/reporte-financiero', async (req, res) => {
+    const { periodo } = req.query;
+    let fechaInicio = new Date();
+    
+    // Lógica de fechas
+    if (periodo === 'ultimo_trimestre') {
+        fechaInicio.setMonth(fechaInicio.getMonth() - 3);
+    } else if (periodo === 'anio_actual') {
+        fechaInicio.setMonth(0, 1); // 1 de enero
+    } else {
+        fechaInicio.setDate(1); // 1 de este mes
+    }
+
     try {
-        const { data: pagos, error } = await supabase.from('pagos').select('*, usuarios(nombre)').order('fecha', { ascending: false });
+        const { data: pagos, error } = await supabase
+            .from('pagos')
+            .select('*, usuarios(nombre)')
+            .gte('fecha', fechaInicio.toISOString())
+            .order('fecha', { ascending: true });
+
         if (error) throw error;
 
-        const total = pagos.reduce((acc, p) => acc + Number(p.monto), 0);
-        const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        const chartData = meses.map((m, index) => ({
+        const total = pagos.reduce((acc, p) => acc + (Number(p.monto) || 0), 0);
+        
+        // Generar chartData basado en los meses que tienen pagos
+        const mesesLabels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const chartData = mesesLabels.map((m, index) => ({
             name: m,
-            total: pagos.filter(p => new Date(p.fecha).getMonth() === index).reduce((acc, p) => acc + Number(p.monto), 0)
-        })).filter((m, i) => i <= new Date().getMonth());
+            total: pagos
+                .filter(p => new Date(p.fecha).getMonth() === index)
+                .reduce((acc, p) => acc + Number(p.monto), 0)
+        })).filter(m => {
+            // Si es "este mes", solo mostramos el mes actual. Si es año, todos hasta hoy.
+            const mesActual = new Date().getMonth();
+            if (periodo === 'este_mes') return m.name === mesesLabels[mesActual];
+            return true; 
+        });
 
         res.json({
             metrics: { total, count: pagos.length },
             chartData,
             methodData: [
-                { name: 'Membresías', value: pagos.filter(p => p.concepto.toLowerCase().includes('membresía')).length, color: '#9333ea' },
-                { name: 'Lockers', value: pagos.filter(p => p.concepto.toLowerCase().includes('locker')).length, color: '#22c55e' },
-                { name: 'Otros', value: pagos.filter(p => !p.concepto.toLowerCase().includes('locker') && !p.concepto.toLowerCase().includes('membresía')).length, color: '#3b82f6' }
+                { name: 'Membresías', value: pagos.filter(p => p.concepto?.toLowerCase().includes('membresía')).length, color: '#9333ea' },
+                { name: 'Lockers', value: pagos.filter(p => p.concepto?.toLowerCase().includes('locker')).length, color: '#22c55e' },
+                { name: 'Otros', value: pagos.filter(p => !p.concepto?.toLowerCase().includes('locker') && !p.concepto?.toLowerCase().includes('membresía')).length, color: '#3b82f6' }
             ],
-            recentPayments: pagos.slice(0, 10)
+            recentPayments: pagos.slice(-10).reverse()
         });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // --- REPORTES ---

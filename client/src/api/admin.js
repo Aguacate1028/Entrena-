@@ -90,3 +90,15 @@ export const actualizarMembresiaRequest = async (id, data) => {
     return await res.json();
 };
 
+export const obtenerReporteFinancieroRequest = async () => {
+    try {
+        const res = await fetch(`${API_URL}/reporte-financiero`);
+        if (!res.ok) throw new Error("Error en servidor");
+        const data = await res.json();
+        return data;
+    } catch (error) {
+        console.error("Error Finanzas:", error);
+        // Retornar estructura básica para evitar que el componente falle
+        return { metrics: { total: 0, count: 0 }, chartData: [], methodData: [], recentPayments: [] };
+    }
+};

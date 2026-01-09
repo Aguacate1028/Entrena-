@@ -12,17 +12,23 @@ import { obtenerReporteFinancieroRequest } from '../api/finanzas';
 const Finanzas = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [periodo, setPeriodo] = useState('este_mes'); // Estado para el filtro
+  const [chartKey, setChartKey] = useState(0);
 
-  useEffect(() => {
+useEffect(() => {
     loadData();
-  }, []);
+    // Truco para solucionar el error de width(-1) en Recharts al cargar
+    const timer = setTimeout(() => setChartKey(prev => prev + 1), 500);
+    return () => clearTimeout(timer);
+  }, [periodo]); // Recargar cada vez que cambie el periodo
 
-  const loadData = async () => {
-    const report = await obtenerReporteFinancieroRequest();
+const loadData = async () => {
+    setLoading(true);
+    // Pasamos el periodo a la petición
+    const report = await obtenerReporteFinancieroRequest(periodo);
     setData(report);
     setLoading(false);
   };
-
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-neutral-50">
         <Loader2 className="animate-spin text-purple-600 mb-4" size={48} />
@@ -34,20 +40,22 @@ const Finanzas = () => {
     <div className="min-h-screen bg-neutral-50 p-6 lg:p-10">
       <div className="max-w-7xl mx-auto">
         
-        {/* Header con Select de Período */}
+{/* Header con Filtro Funcional */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
           <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-3xl font-black text-neutral-900 tracking-tight">Reporte <span className="text-purple-600">Financiero</span></h1>
-            </div>
-            <p className="text-neutral-500 font-medium">Análisis de rentabilidad y flujo de efectivo del gimnasio.</p>
+            <h1 className="text-3xl font-black text-neutral-900 tracking-tight">Reporte <span className="text-purple-600">Financiero</span></h1>
+            <p className="text-neutral-500 font-medium">Análisis de rentabilidad y flujo de efectivo.</p>
           </div>
           
           <div className="flex gap-3 w-full md:w-auto">
-            <select className="bg-white border border-neutral-200 px-4 py-3 rounded-2xl font-bold text-sm shadow-sm focus:ring-2 focus:ring-purple-500 outline-none">
-              <option>Este Mes</option>
-              <option>Último Trimestre</option>
-              <option>Año 2026</option>
+            <select 
+              className="bg-white border border-neutral-200 px-4 py-3 rounded-2xl font-bold text-sm shadow-sm focus:ring-2 focus:ring-purple-500 outline-none cursor-pointer"
+              value={periodo}
+              onChange={(e) => setPeriodo(e.target.value)}
+            >
+              <option value="este_mes">Este Mes</option>
+              <option value="ultimo_trimestre">Último Trimestre</option>
+              <option value="anio_actual">Año 2026</option>
             </select>
           </div>
         </header>
@@ -68,13 +76,13 @@ const Finanzas = () => {
             color="blue" 
             sub="Por cada transacción"
           />
-          <MetricCard 
-            label="Volumen Operativo" 
-            value={`${data.metrics.count} pagos`} 
-            icon={ArrowUpRight} 
-            color="green" 
-            sub="Transacciones liquidadas"
-          />
+        <MetricCard 
+            label="Ticket Promedio" 
+            value={`$${data.metrics.count > 0 ? (data.metrics.total / data.metrics.count).toFixed(2) : '0.00'}`} 
+            icon={Landmark} 
+            color="blue" 
+            sub="Por cada transacción"
+        />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -84,9 +92,9 @@ const Finanzas = () => {
               <h3 className="text-xl font-bold text-neutral-800">Crecimiento Mensual</h3>
               <span className="text-xs font-bold text-purple-600 bg-purple-50 px-3 py-1 rounded-full">Actualizado hace un momento</span>
             </div>
-            <div className="h-[350px]">
+          <div className="h-[350px] w-full" key={chartKey}>
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data.chartData}>
+                <AreaChart data={data.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#9333ea" stopOpacity={0.3}/>
@@ -94,13 +102,12 @@ const Finanzas = () => {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} dy={10} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
                   <YAxis axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
                   <Tooltip 
-                    contentStyle={{borderRadius: '24px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'}} 
-                    itemStyle={{fontWeight: 'bold', color: '#9333ea'}}
+                    contentStyle={{borderRadius: '20px', border: 'none', boxShadow: '0 10px 15px rgba(0,0,0,0.1)'}} 
                   />
-                  <Area type="monotone" dataKey="total" stroke="#9333ea" strokeWidth={4} fill="url(#colorGrad)" />
+                  <Area type="monotone" dataKey="total" stroke="#9333ea" strokeWidth={4} fill="url(#colorGrad)" animationDuration={1000} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
