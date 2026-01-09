@@ -65,3 +65,31 @@ export const cancelarInscripcionRequest = async (idClase, idUsuario) => {
         throw error;
     }
 };
+
+export const crearClaseRequest = async (datos) => {
+    const res = await fetch(`${API_URL}/clases`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos)
+    });
+    return await res.json();
+};
+
+export const actualizarClaseRequest = async (id, datos) => {
+    const res = await fetch(`${API_URL}/clases/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos)
+    });
+    return await res.json();
+};
+
+export const eliminarClaseRequest = async (id) => {
+    const res = await fetch(`${API_URL}/clases/${id}`, { method: 'DELETE' });
+    return await res.json();
+};
+
+export const obtenerListaEntrenadoresRequest = async () => {
+    const res = await fetch(`${API_URL}/clases/entrenadores/lista`);
+    return await res.json();
+};

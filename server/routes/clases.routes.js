@@ -151,4 +151,65 @@ router.delete('/inscripciones/:id_clase/:id_usuario', async (req, res) => {
     }
 });
 
+// ... (tus rutas GET 1 y 2 se mantienen igual)
+
+// 6. CREAR CLASE (Solo Staff/Admin)
+router.post('/', async (req, res) => {
+    const { nombre, descripcion, horario, cupo, entrenador, dia_semana } = req.body;
+    try {
+        const { data, error } = await supabase
+            .from('clases')
+            .insert([{ nombre, descripcion, horario, cupo, entrenador, dia_semana }])
+            .select();
+        if (error) throw error;
+        res.json(data[0]);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// 7. ACTUALIZAR CLASE
+router.put('/:id', async (req, res) => {
+    const { id } = req.params;
+    const updates = req.body;
+    try {
+        const { data, error } = await supabase
+            .from('clases')
+            .update(updates)
+            .eq('id', id)
+            .select();
+        if (error) throw error;
+        res.json(data[0]);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// 8. ELIMINAR CLASE
+router.delete('/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { error } = await supabase.from('clases').delete().eq('id', id);
+        if (error) throw error;
+        res.json({ message: "Clase eliminada" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+// OBTENER LISTA RÁPIDA DE ENTRENADORES PARA SELECTS
+router.get('/entrenadores/lista', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('entrenadores')
+            .select('id, nombre')
+            .order('nombre', { ascending: true });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
 export default router;

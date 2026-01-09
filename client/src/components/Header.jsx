@@ -99,6 +99,7 @@ const Header = ({
             // STAFF
             { id: 's-anuncios', label: 'Anuncios', icon: BadgeInfo, path: '/', role: 'staff' },
             { id: 'st-dash', label: 'Panel', icon: LayoutDashboard, path: '/staffdashboard', role: 'staff' },
+            { id: 's-clases', label: 'Clases', icon: Dumbbell, path: '/clases', role: 'staff' },
             { id: 'st-accesos', label: 'Accesos', icon: QrCode, path: '/staffscanner', role: 'staff' },
             { id: 'st-socios', label: 'Socios', icon: Users, path: '/staffsocios', role: 'staff' },
             { id: 'st-pagos', label: 'Pagos', icon: CreditCard, path: '/staffpagos', role: 'staff' },
@@ -108,6 +109,7 @@ const Header = ({
             // ADMINISTRADOR
             { id: 's-anuncios', label: 'Anuncios', icon: BadgeInfo, path: '/', role: 'administrador' },
             { id: 'ad-dash', label: 'Panel', icon: LayoutDashboard, path: '/admindashboard', role: 'administrador' },
+            { id: 's-clases', label: 'Clases', icon: Dumbbell, path: '/clases', role: 'administrador' },
             { id: 'ad-reportes', label: 'Reportes', icon: FileText, path: '/adminreportes', role: 'administrador' },
             { id: 'ad-pagos', label: 'Finanzas', icon: CreditCard, path: '/finanzas', role: 'administrador' },
             { id: 'ad-rrhh', label: 'Entrenadores', icon: Dumbbell, path: '/adminentrenadores', role: 'administrador' },
