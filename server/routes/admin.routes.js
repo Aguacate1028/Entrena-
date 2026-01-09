@@ -63,13 +63,32 @@ router.get('/entrenadores-list', async (req, res) => {
     } catch (err) { res.status(500).json([]); }
 });
 
-// --- USUARIOS ---
+// --- DIRECTORIO DE USUARIOS COMPLETO ---
 router.get('/usuarios', async (req, res) => {
     try {
-        const { data } = await supabase.from('usuarios').select('*, entrenadores(nombre)').order('fecha_registro', { ascending: false });
-        const formateados = data.map(u => ({ ...u, nombre_entrenador: u.entrenadores?.nombre || 'Sin asignar' }));
+        // Obtenemos usuarios y sus entrenadores asignados
+        const { data, error } = await supabase
+            .from('usuarios')
+            .select(`
+                *,
+                entrenadores:id_entrenador ( nombre ),
+                asistencias ( fecha_hora, metodo )
+            `)
+            .order('fecha_registro', { ascending: false });
+
+        if (error) throw error;
+
+        const formateados = data.map(u => ({ 
+            ...u, 
+            nombre_entrenador: u.entrenadores?.nombre || 'Sin asignar',
+            // Tomamos las últimas 5 asistencias para el modal "Expediente"
+            ultimas_asistencias: u.asistencias?.sort((a,b) => new Date(b.fecha_hora) - new Date(a.fecha_hora)).slice(0, 5) || []
+        }));
+
         res.json(formateados);
-    } catch (err) { res.status(500).json([]); }
+    } catch (err) { 
+        res.status(500).json([]); 
+    }
 });
 
 export default router;

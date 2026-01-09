@@ -12,12 +12,19 @@ const AdminUsuarios = () => {
     const [selectedUser, setSelectedUser] = useState(null); // Para el modal
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        obtenerUsuariosAdmin()
-            .then(data => setUsuarios(data || []))
-            .catch(() => setUsuarios([]))
-            .finally(() => setLoading(false));
-    }, []);
+useEffect(() => {
+    setLoading(true);
+    obtenerUsuariosAdmin()
+        .then(data => {
+            if (Array.isArray(data)) {
+                setUsuarios(data);
+            } else {
+                setUsuarios([]);
+            }
+        })
+        .catch(() => setUsuarios([]))
+        .finally(() => setLoading(false));
+}, []);
 
     const filtrados = usuarios.filter(u => 
         u.nombre?.toLowerCase().includes(busqueda.toLowerCase()) || 

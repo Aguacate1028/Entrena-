@@ -89,3 +89,4 @@ export const actualizarMembresiaRequest = async (id, data) => {
     if (!res.ok) throw new Error('Error al actualizar');
     return await res.json();
 };
+
