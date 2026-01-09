@@ -5,12 +5,22 @@ export const obtenerPostsRequest = async () => {
     return await res.json();
 };
 
+// Frontend: api/comunidad.js
 export const crearPostRequest = async (formData) => {
-    const res = await fetch(`${API_URL}`, {
-        method: 'POST',
-        body: formData // Se envía como FormData por la imagen
-    });
-    return await res.json();
+    try {
+        const res = await fetch(`${API_URL}`, {
+            method: 'POST',
+            body: formData // Importante: NO poner headers de Content-Type aquí
+        });
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.error || 'Error al crear post');
+        }
+        return await res.json();
+    } catch (error) {
+        console.error("Error en crearPostRequest:", error);
+        throw error;
+    }
 };
 
 export const darLikeRequest = async (idPost) => {
